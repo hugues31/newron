@@ -1,0 +1,14 @@
+[package]
+name = "newron"
+version = "0.1.0"
+authors = ["Hugues Gaillard <hugues.gaillard@me.com>"]
+edition = "2018"
+keywords = [ "neural", "network", "deep", "learning", "data science" ]
+readme = "README.md"
+
+[dependencies]
+
+
+[[example]]
+name = "simple"
+path = "examples/simple.rs"
