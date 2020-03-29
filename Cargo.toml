@@ -7,7 +7,7 @@ keywords = [ "neural", "network", "deep", "learning", "data science" ]
 readme = "README.md"
 
 [dependencies]
-
+nalgebra = "0.20"
 
 [[example]]
 name = "simple"
