@@ -8,6 +8,7 @@ description = """
 A Rust library to train and infer deep learning models.
 """
 readme = "README.md"
+license = "MIT"
 
 [dependencies]
 nalgebra = "0.20"
