@@ -1,5 +1,6 @@
 ![Newron](https://raw.githubusercontent.com/hugues31/newron/master/newron.png)
 ===========
+![Rust](https://github.com/hugues31/newron/workflows/Rust/badge.svg?branch=master)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 
