@@ -3,7 +3,7 @@ name = "newron"
 version = "0.1.0"
 authors = ["Hugues Gaillard <hugues.gaillard@me.com>"]
 edition = "2018"
-keywords = [ "neural", "network", "deep", "learning", "data", "science" ]
+keywords = [ "neural", "network", "deep", "learning" ]
 description = """
 A Rust library to train and infer deep learning models.
 """
