@@ -1,3 +1,6 @@
-pub fn say_hello() {
-    println!("Hello !");
-}
+pub mod activation;
+pub mod sequential;
+pub mod layer;
+
+use nalgebra::{DMatrix};
+pub type Matrix = DMatrix::<f64>;
