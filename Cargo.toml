@@ -14,5 +14,5 @@ license = "MIT"
 nalgebra = "0.20"
 
 [[example]]
-name = "simple"
-path = "examples/simple.rs"
+name = "perceptron"
+path = "examples/perceptron.rs"
