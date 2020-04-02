@@ -7,9 +7,9 @@ pub fn relu(x: f64) -> f64 {
 }
 
 pub fn relu2deriv(x: f64) -> f64 {
-    if x > 0.0 {
-        1.0
-    } else {
+    if x < 0.0 {
         0.0
+    } else {
+        1.0
     }
 }
