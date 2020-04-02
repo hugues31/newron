@@ -1,6 +1,9 @@
 ![Newron](https://raw.githubusercontent.com/hugues31/newron/master/newron.png)
 ===========
+[![crates.io](https://img.shields.io/crates/v/newron.svg)](https://crates.io/crates/newron)
+[![Downloads from crates.io](https://img.shields.io/crates/d/newron.svg)](https://crates.io/crates/newron)
 ![Rust](https://github.com/hugues31/newron/workflows/Rust/badge.svg?branch=master)
+[![doc.rs](https://docs.rs/newron/badge.svg)](https://docs.rs/newron/)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 
