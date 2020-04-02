@@ -8,6 +8,8 @@ description = """
 A Rust library to train and infer deep learning models.
 """
 readme = "README.md"
+homepage = "https://github.com/hugues31/newron"
+documentation = "https://docs.rs/newron/"
 license = "MIT"
 
 [dependencies]
