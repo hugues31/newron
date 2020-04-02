@@ -3,7 +3,7 @@ use crate::Matrix;
 pub struct Layer {
     activation: String,
     unit: usize,
-    input_size: usize,
+    pub input_size: usize,
     dropout: f32,
     pub weights: Matrix
 }

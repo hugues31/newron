@@ -9,36 +9,53 @@ pub struct Sequential {
 }
 
 impl Sequential {
+    /// Create a new empty Sequential model.
     pub fn new() -> Sequential {
         Sequential { layers: Vec::new::<>() }
     }
 
-    // Add a layer to the model
+    /// Add a layer to the model
     pub fn add(&mut self, layer: Layer) {
         self.layers.push(layer);
     }
 
-    // Fit the model
+    /// Use this function to train the model on x_train with target y_train.
+    /// Set `verbose` to true to see debugging and training information.
     pub fn fit(&mut self, x_train: Matrix, y_train: Matrix, epochs: u32, verbose: bool) {
-        let alpha = 0.2;
+        let alpha = 0.002;
 
         for iteration in 0..epochs {
             let mut error = 0.0;
 
             // iterate through samples
-            for i in 0..self.layers.first().unwrap().weights.shape().0 {
-                // SGD
-                let layer_0 = x_train.row(i);
-                let layer_1 = (layer_0*&self.layers[0].weights).map(activation::relu);
-                let layer_2 = &layer_1 * &self.layers[1].weights;
-                error += (&layer_2 - y_train.row(i))[0].powi(2);
-                let layer_2_delta = &layer_2 - y_train.row(i);
-    
-                let layer_1_delta_dot = &layer_2_delta * &self.layers[1].weights.transpose();
-                let layer_1_delta = layer_1_delta_dot.component_mul(&layer_1.map(activation::relu2deriv));
-      
-                self.layers[1].weights -= alpha * layer_1.transpose() * &layer_2_delta;
-                self.layers[0].weights -= alpha * layer_0.transpose() * &layer_1_delta;
+            for i in 0..x_train.shape().0 {
+                // SGD implementation below
+
+                // forward propagation
+                let mut outputs: Vec<Matrix> = Vec::new();
+                outputs.push(Matrix::from(x_train.rows(i, 1)));
+
+                for l in &self.layers {
+                    let layer_l = (outputs.last().unwrap()*&l.weights).map(activation::relu);
+                    outputs.push(layer_l);
+                }
+
+                error += (outputs.last().unwrap() - y_train.row(i))[0].powi(2);
+                // compute gradient
+                let mut gradients: Vec<Matrix> = Vec::new();
+                
+                gradients.push(outputs.last().unwrap() - y_train.rows(i, 1));
+                
+                for (j, l) in self.layers.iter().skip(0).rev().enumerate() {
+                    let gradient_dot = gradients.last().unwrap() * l.weights.transpose();
+                    let gradient = gradient_dot.component_mul(&outputs[outputs.len() -2 - j].map(activation::relu2deriv));
+                    gradients.push(gradient);
+                }
+
+                // back propagation
+                for (i, l) in self.layers.iter_mut().rev().enumerate() {
+                    l.weights -= alpha * &outputs[outputs.len() - i -2].transpose() * &gradients[i];
+                }
             }
 
             if verbose {
