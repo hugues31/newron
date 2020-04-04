@@ -10,4 +10,13 @@ mod tests {
     fn test_sigmoid2deriv() {
         assert_eq!(sigmoid2deriv(0.), 0.25)
     }
+
+    #[test]
+    fn test_relu() {
+        assert_eq!(relu(0.), 0.)
+    }
+    #[test]
+    fn test_relu2deriv() {
+        assert_eq!(relu2deriv(0.), 1.)
+    }
 }
