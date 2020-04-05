@@ -1,16 +1,15 @@
 use newron::sequential::Sequential;
 use newron::layer::Layer;
-use newron::Matrix;
 
 
 fn main() {
-    let x_train = Matrix::from_row_slice(4,3,&[
-        1.0, 0.0, 1.0,
-        0.0, 1.0, 1.0,
-        0.0, 0.0, 1.0,
-        1.0, 1.0, 1.0]);
+    // let x_train = Matrix::from_row_slice(4,3,&[
+    //     1.0, 0.0, 1.0,
+    //     0.0, 1.0, 1.0,
+    //     0.0, 0.0, 1.0,
+    //     1.0, 1.0, 1.0]);
 
-    let y_train = Matrix::from_row_slice(4,1,&[1.0, 1.0, 0.0, 0.0]);
+    // let y_train = Matrix::from_row_slice(4,1,&[1.0, 1.0, 0.0, 0.0]);
 
     let mut model = Sequential::new();
     
@@ -22,5 +21,5 @@ fn main() {
     model.add(layer_2);
     model.add(layer_3);
 
-    model.fit(x_train, y_train, 1_000, true);
+    // model.fit(x_train, y_train, 1_000, true);
 }

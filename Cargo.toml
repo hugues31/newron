@@ -13,9 +13,6 @@ repository = "https://github.com/hugues31/newron"
 documentation = "https://docs.rs/newron/"
 license = "MIT"
 
-[dependencies]
-nalgebra = "0.20"
-
 [[example]]
 name = "perceptron"
 path = "examples/perceptron.rs"

@@ -1,11 +1,8 @@
-use crate::Matrix;
-
 pub struct Layer {
     activation: String,
     unit: usize,
     pub input_size: usize,
-    dropout: f32,
-    pub weights: Matrix
+    dropout: f32
 }
 
 impl Layer {
@@ -14,8 +11,7 @@ impl Layer {
             activation,
             unit,
             input_size,
-            dropout,
-            weights: Matrix::new_random(input_size, unit).map(|x| 2.0 * x - 1.0)
+            dropout
         }
     }
 }
