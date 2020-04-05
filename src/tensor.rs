@@ -3,10 +3,10 @@
 use std::ops::{Add, Mul};
 use std::fmt;
 
-pub struct Tensor {
+pub struct Tensor<'a> {
     pub data: Vec<f64>,
     shape: Vec<usize>,
-    creators: Vec<&Tensor>
+    creators: Vec<&'a Tensor<'a>>
 }
 
 // get 2d positioned value in a 1d array
@@ -14,15 +14,15 @@ fn get_value(tensor: &Tensor, x: usize, y: usize) -> f64 {
     tensor.data[x * tensor.shape[1] + y]
 }
 
-impl Tensor {
-    pub fn new (data: Vec<f64>, shape: Vec<usize>) -> Tensor {
+impl<'a> Tensor<'a> {
+    pub fn new (data: Vec<f64>, shape: Vec<usize>) -> Tensor<'a> {
         Tensor { data, shape, creators: Vec::new() }
     }
 }
 
 // Implement addition for tensor
-impl Add for Tensor {
-    type Output = Tensor;
+impl<'a> Add for Tensor<'a> {
+    type Output = Tensor<'a>;
 
     fn add(self, other: Tensor) -> Tensor {
 
@@ -33,7 +33,7 @@ impl Add for Tensor {
         Tensor {
             data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a + b).collect(),
             shape: self.shape,
-            creators: vec![&self, other]
+            creators: vec![&self, &other]
         }
     }
 }
