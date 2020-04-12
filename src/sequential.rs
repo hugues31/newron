@@ -36,27 +36,26 @@ impl Sequential {
                 outputs.push(x_train.get_row(i));
 
                 for l in &self.layers {
-                    println!("a: {:?}, b: {:?}", outputs.last().unwrap(), &l.weights);
                     let layer_l =  l.weights.dot(&outputs.last().unwrap()).map(activation::relu);
                     outputs.push(layer_l);
                 }
 
-                // error += (outputs.last().unwrap() - y_train.row(i))[0].powi(2);
-                // // compute gradient
-                // let mut gradients: Vec<Matrix> = Vec::new();
+                error += (outputs.last().unwrap() - &y_train.get_row(i))[0].powi(2);
+                // compute gradient
+                let mut gradients: Vec<Tensor> = Vec::new();
                 
-                // gradients.push(outputs.last().unwrap() - y_train.rows(i, 1));
+                gradients.push(outputs.last().unwrap() - &y_train.get_row(i));
                 
-                // for (j, l) in self.layers.iter().skip(0).rev().enumerate() {
-                //     let gradient_dot = gradients.last().unwrap() * l.weights.transpose();
-                //     let gradient = gradient_dot.component_mul(&outputs[outputs.len() -2 - j].map(activation::relu2deriv));
-                //     gradients.push(gradient);
-                // }
+                for (j, l) in self.layers.iter().skip(0).rev().enumerate() {
+                    let gradient_dot = l.weights.dot(gradients.last().unwrap());
+                    let gradient = gradient_dot.dot(&outputs[outputs.len() -2 - j].map(activation::relu2deriv)); // FIX here
+                    gradients.push(gradient);
+                }
 
-                // // back propagation
-                // for (i, l) in self.layers.iter_mut().rev().enumerate() {
-                //     l.weights -= alpha * &outputs[outputs.len() - i -2].transpose() * &gradients[i];
-                // }
+                // back propagation
+                for (i, l) in self.layers.iter_mut().rev().enumerate() {
+                    l.weights -= alpha * (&outputs[outputs.len() - i -2].get_transpose() * &gradients[i]); // Possible FIX here
+                }
             }
 
             if verbose {

@@ -1,6 +1,6 @@
 // Implement basic tensor structure
 
-use std::ops::{Add, Mul};
+use std::ops::{Add, Sub, SubAssign, Mul, Index};
 use std::fmt;
 
 
@@ -90,11 +90,11 @@ impl Tensor {
     }
 }
 
-// Implement addition for tensor
-impl Add for Tensor {
+// Implement addition for tensor references
+impl<'a, 'b> Add<&'b Tensor> for &'b Tensor {
     type Output = Tensor;
 
-    fn add(self, other: Tensor) -> Tensor {
+    fn add(self, other: &'b Tensor) -> Tensor {
 
         if self.shape != other.shape {
             panic!("Could not add 2 tensors of different");
@@ -102,22 +102,47 @@ impl Add for Tensor {
 
         Tensor {
             data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a + b).collect(),
-            shape: self.shape
+            shape: self.shape.to_vec()
         }
     }
 }
 
+// Implement addition for tensor
+impl Add for Tensor {
+    type Output = Tensor;
 
-// impl<'a, 'b> Add<&'b Vector> for &'a Vector {
-//     type Output = Vector;
+    fn add(self, other: Tensor) -> Tensor {
+        &self + &other
+    }
+}
 
-//     fn add(self, other: &'b Vector) -> Vector {
-//         Vector {
-//             x: self.x + other.x,
-//             y: self.y + other.y,
-//         }
-//     }
-// }
+// Implement substraction for tensor
+impl<'a, 'b> Sub<&'b Tensor> for &'b Tensor {
+    type Output = Tensor;
+
+    fn sub(self, other: &'b Tensor) -> Tensor {
+
+        if self.shape != other.shape {
+            panic!("Could not substract 2 tensors of different");
+        }
+
+        Tensor {
+            data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a - b).collect(),
+            shape: self.shape.to_vec()
+        }
+    }
+}
+
+// Implement substract assignation for tensor
+// E.g : tensor -= other_tensor
+impl SubAssign for Tensor {
+    fn sub_assign(&mut self, other: Self) {
+        *self = Self {
+            data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a - b).collect(),
+            shape: self.shape.to_vec()
+        };
+    }
+}
 
 // Implement multiplication for tensor
 impl<'a, 'b> Mul<&'b Tensor> for  &'a Tensor {
@@ -135,7 +160,7 @@ impl<'a, 'b> Mul<&'b Tensor> for  &'a Tensor {
                 2 => {
                     // if # of rows of A is != # cols of B
                     if self.shape[0] != other.shape[1] {
-                        panic!("Could not multiply tensors if # rows of A is different # cols of B.");
+                        panic!("Could not multiply matrix if # rows of A is different # cols of B.\nA: {:?}\nB: {:?}", self, other);
                     }
                     
                     // C = A*B = (m,n) * (n, k) = (m, k)
@@ -167,6 +192,39 @@ impl<'a, 'b> Mul<&'b Tensor> for  &'a Tensor {
                 _ => panic!("unsupported dimension*")
             }
         }
+    }
+}
+
+
+// Implement multiplication for tensor with scalar (f64)
+// Multiplication is element-wise in this case
+impl Mul<f64> for Tensor {
+    type Output = Tensor;
+
+    fn mul(self, other: f64) -> Tensor {
+        Tensor {
+            data: self.data.iter().map(|a| a * other).collect(),
+            shape: self.shape.to_vec()
+        }
+    }
+}
+
+impl Mul<Tensor> for f64 {
+    type Output = Tensor;
+
+    fn mul(self, other: Tensor) -> Tensor {
+        Tensor {
+            data: other.data.iter().map(|a| a * self).collect(),
+            shape: other.shape.to_vec()
+        }
+    }
+}
+
+impl Index<usize> for Tensor {
+    type Output = f64;
+
+    fn index(&self, index: usize) -> &f64 {
+        &self.data[index]
     }
 }
 
