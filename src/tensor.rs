@@ -3,26 +3,96 @@
 use std::ops::{Add, Mul};
 use std::fmt;
 
-pub struct Tensor<'a> {
+
+pub struct Tensor {
     pub data: Vec<f64>,
-    shape: Vec<usize>,
-    creators: Vec<&'a Tensor<'a>>
+    pub shape: Vec<usize>
 }
 
-// get 2d positioned value in a 1d array
-fn get_value(tensor: &Tensor, x: usize, y: usize) -> f64 {
-    tensor.data[x * tensor.shape[1] + y]
-}
+impl Tensor {
+    /// Creates a new Tensor from `date` with the `shape` specified.
+    pub fn new (data: Vec<f64>, shape: Vec<usize>) -> Tensor {
+        Tensor { data, shape }
+    }
 
-impl<'a> Tensor<'a> {
-    pub fn new (data: Vec<f64>, shape: Vec<usize>) -> Tensor<'a> {
-        Tensor { data, shape, creators: Vec::new() }
+    /// Creates a Tensor filled with zeroes with the `shape` specified.
+    pub fn zero(shape: Vec<usize>) -> Tensor {
+        Tensor { data: vec![0.0; shape.iter().product()], shape }
+    }
+
+    /// Transpose matrix. Only for 2 dimensionals Tensor (matrix)
+    pub fn transpose(&mut self) {
+        // TODO: add check for dimension
+        self.shape = vec![self.shape[1], self.shape[0]];
+    }
+
+    /// Creates new matrix based on the transposed `self` Tensor
+    pub fn get_transpose(&self) -> Tensor {
+        Tensor {
+            data: self.data.to_vec(),
+            shape: vec![self.shape[1], self.shape[0]]
+        }
+    }
+
+    /// get 2d positioned value in a 1d array
+    fn get_value(&self, x: usize, y: usize) -> f64 {
+        self.data[x * &self.shape[1] + y]
+    }
+
+    /// Get i-th row of the matrix. Return a new Tensor.
+    /// Only for 2 dimensionals Tensor (matrix)
+    pub fn get_row(&self, i: usize) -> Tensor {
+        // TODO: add check for dimension
+        Tensor {
+            data: self.data[i*&self.shape[1]..(i+1)*&self.shape[1]].to_vec(),
+            shape: vec![1, self.shape[1]]
+        }
+    }
+
+    /// Creates a new Tensor where the function `f` is applied
+    /// element-wise. Does not change the shape of tensor.
+    pub fn map(&self, f: fn(f64) -> f64) -> Tensor {
+        Tensor {
+            data: self.data.to_vec().into_iter().map(f).collect(),
+            shape: self.shape.to_vec()
+        }
+    }
+
+    /// Dot product much like the numpy implementation
+    /// Dot product of two arrays. Specifically :
+    /// If both a and b are 1-D arrays, it is inner product of vectors (without complex conjugation). TODO
+    /// If both a and b are 2-D arrays, it is matrix multiplication, but using matmul or a @ b is preferred. TODO
+    /// If either a or b is 0-D (scalar), it is equivalent to multiply and using numpy.multiply(a, b) or a * b is preferred. TODO
+    /// If a is an N-D array and b is a 1-D array, it is a sum product over the last axis of a and b. OK
+    /// If a is an N-D array and b is an M-D array (where M>=2), it is a sum product over the last axis of a and the second-to-last axis of b. TODO
+    pub fn dot(&self, other: &Tensor) -> Tensor {
+        if self.shape.len() > 1 && other.shape[0] == 1 {
+            // Sum product over the last axis of self and other
+            let mut sum_product = Vec::new();
+
+            for i in 0..self.shape[1] {
+                let mut t = 0.0;
+                // TODO improve with N dimensions for &self (current implementation works only for Matrix)
+                for j in 0..other.shape[1] {
+                    println!("t += {} * {}", other.data[j], self.get_value(j, i));
+                    t += other.data[j] * self.get_value(j, i);
+                }
+
+                sum_product.push(t);
+                println!("{:?}", sum_product);
+            }
+
+            return Tensor::new(sum_product, vec![1, self.shape[1]]);
+        }
+        else {
+            unimplemented!("Dot function not complete yet.")
+        }
     }
 }
 
 // Implement addition for tensor
-impl<'a> Add for Tensor<'a> {
-    type Output = Tensor<'a>;
+impl Add for Tensor {
+    type Output = Tensor;
 
     fn add(self, other: Tensor) -> Tensor {
 
@@ -32,17 +102,28 @@ impl<'a> Add for Tensor<'a> {
 
         Tensor {
             data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a + b).collect(),
-            shape: self.shape,
-            creators: vec![&self, &other]
+            shape: self.shape
         }
     }
 }
 
+
+// impl<'a, 'b> Add<&'b Vector> for &'a Vector {
+//     type Output = Vector;
+
+//     fn add(self, other: &'b Vector) -> Vector {
+//         Vector {
+//             x: self.x + other.x,
+//             y: self.y + other.y,
+//         }
+//     }
+// }
+
 // Implement multiplication for tensor
-impl Mul for Tensor {
+impl<'a, 'b> Mul<&'b Tensor> for  &'a Tensor {
     type Output = Tensor;
 
-    fn mul(self, other: Tensor) -> Tensor {
+    fn mul(self, other: &'b Tensor) -> Tensor {
         if self.shape.len() != self.shape.len() {
             panic!("Could not multiply tensors of different dimensions");
         }
@@ -69,7 +150,7 @@ impl Mul for Tensor {
                         for j in 0..k {
                             let mut c_ij = 0.0;
                             for s in 0..n {
-                                c_ij = c_ij + (get_value(&self, i, s) * get_value(&other, s, j));
+                                c_ij = c_ij + &self.get_value(i, s) * &other.get_value(s, j);
                             }
                             c.push(c_ij);
                         }
@@ -81,12 +162,10 @@ impl Mul for Tensor {
             },
 
             shape: match &self.shape.len() {
-                0 => self.shape, // empty vec
+                0 => self.shape.to_vec(), // empty vec
                 1 | 2 => vec![self.shape[0], other.shape[1]],
                 _ => panic!("unsupported dimension*")
-            },
-
-            creators: Vec::new()
+            }
         }
     }
 }

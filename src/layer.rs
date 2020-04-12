@@ -1,8 +1,11 @@
+use crate::tensor::Tensor;
+
 pub struct Layer {
     activation: String,
     unit: usize,
     pub input_size: usize,
-    dropout: f32
+    dropout: f32,
+    pub weights: Tensor
 }
 
 impl Layer {
@@ -11,7 +14,8 @@ impl Layer {
             activation,
             unit,
             input_size,
-            dropout
+            dropout,
+            weights: Tensor::zero(vec![input_size, unit]) // replace zero with random
         }
     }
 }
