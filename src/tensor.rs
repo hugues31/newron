@@ -1,5 +1,7 @@
 // Implement basic tensor structure
 
+use crate::random::Rand;
+
 use std::ops::{Add, Sub, SubAssign, Mul, Index};
 use std::fmt;
 
@@ -10,7 +12,7 @@ pub struct Tensor {
 }
 
 impl Tensor {
-    /// Creates a new Tensor from `date` with the `shape` specified.
+    /// Creates a new Tensor from `data` with the `shape` specified.
     pub fn new (data: Vec<f64>, shape: Vec<usize>) -> Tensor {
         Tensor { data, shape }
     }
@@ -18,6 +20,23 @@ impl Tensor {
     /// Creates a Tensor filled with zeroes with the `shape` specified.
     pub fn zero(shape: Vec<usize>) -> Tensor {
         Tensor { data: vec![0.0; shape.iter().product()], shape }
+    }
+
+    /// Creates a Tensor filled with random values between -1 and +1 with the
+    /// `shape` specified.
+    pub fn random(shape: Vec<usize>, seed: u32) -> Tensor {
+        let mut rng = Rand::new(seed);
+    
+        // Throw a dice 100 times
+        let number_values = shape.iter().product();
+        let data: Vec<f64> = (0..number_values).map(|_| rng.rand_float()).collect();
+        // println!("{:?}",data);
+    
+        // Shuffle an array
+        // let mut v: Vec<u32> = (1..101).collect();
+        // rng.shuffle(&mut v);
+
+        Tensor { data, shape }
     }
 
     /// Transpose matrix. Only for 2 dimensionals Tensor (matrix)
@@ -74,12 +93,11 @@ impl Tensor {
                 let mut t = 0.0;
                 // TODO improve with N dimensions for &self (current implementation works only for Matrix)
                 for j in 0..other.shape[1] {
-                    println!("t += {} * {}", other.data[j], self.get_value(j, i));
                     t += other.data[j] * self.get_value(j, i);
                 }
 
                 sum_product.push(t);
-                println!("{:?}", sum_product);
+
             }
 
             return Tensor::new(sum_product, vec![1, self.shape[1]]);
@@ -87,6 +105,16 @@ impl Tensor {
         else {
             unimplemented!("Dot function not complete yet.")
         }
+    }
+
+    /// Element-wise multiplication (or Hadamard product)
+    pub fn mult_el(&self, other: &Tensor) -> Tensor {
+        assert_eq!(self.shape, other.shape);
+
+        Tensor::new(
+            self.data.iter().zip(other.data.iter()).map(|(a, b)| a * b).collect(),
+            self.shape.to_vec()
+        )
     }
 }
 
@@ -158,9 +186,9 @@ impl<'a, 'b> Mul<&'b Tensor> for  &'a Tensor {
                 0 => vec![self.data[0] * other.data[0]],
                 1 => self.data.iter().zip(other.data.iter()).map(|(a, b)| a * b).collect(),
                 2 => {
-                    // if # of rows of A is != # cols of B
-                    if self.shape[0] != other.shape[1] {
-                        panic!("Could not multiply matrix if # rows of A is different # cols of B.\nA: {:?}\nB: {:?}", self, other);
+                    // if # of cols of A is != # rows of B
+                    if self.shape[1] != other.shape[0] {
+                        panic!("Could not multiply matrix if # cols of A is different # rows of B.\nA: {:?}\nB: {:?}", self, other);
                     }
                     
                     // C = A*B = (m,n) * (n, k) = (m, k)
@@ -220,6 +248,14 @@ impl Mul<Tensor> for f64 {
     }
 }
 
+impl Mul<Tensor> for Tensor {
+    type Output = Tensor;
+
+    fn mul(self, other: Tensor) -> Tensor {
+        &self * &other
+    }
+}
+
 impl Index<usize> for Tensor {
     type Output = f64;
 
@@ -235,12 +271,47 @@ impl PartialEq for Tensor {
     }
 }
 
-// Implement debug
+// Implement Debug
 impl fmt::Debug for Tensor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Tensor")
-         .field("data", &self.data)
+         .field("data", &format_args!("{}", self))
          .field("shape", &self.shape)
          .finish()
+    }
+}
+
+// Implement Display
+impl fmt::Display for Tensor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // 0D: "3.14"
+        // 1D: "[1.0, 2.0, 3.0]"
+        // 2D: "|1.0, 2.0|
+        //      |3.0, 4.0|"
+        // ND: "?"
+
+        match self.shape.len() {
+            0 => write!(f, "{}", self.data[0]),
+            1 => {
+                let mut result = String::new();
+                for el in &self.data {
+                    result += &el.to_string();
+                }
+                write!(f, "[{}]", result)
+            },
+            2 => {
+                let mut result = String::from("\n");
+                for row in 0..self.shape[0] {
+                    result += "|";
+                    for col in 0..self.shape[1] {
+                        result += &(self.get_value(row, col).to_string() + "  ")
+                    }
+                    result += "|\n";
+                }
+                write!(f, "{}", result)
+            }
+            _ => unimplemented!()
+        }
+        
     }
 }

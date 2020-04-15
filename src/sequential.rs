@@ -24,6 +24,14 @@ impl Sequential {
     pub fn fit(&mut self, x_train: Tensor, y_train: Tensor, epochs: u32, verbose: bool) {
         let alpha = 0.002;
 
+        // Initialize weights with random values
+        let mut weights: Vec<Tensor> = Vec::new();
+        for i in 0..self.layers.len() {
+            let unit = self.layers[i].unit;
+            let input_size = if i == 0 {x_train.shape[1]} else {self.layers[i-1].unit};
+            weights.push(Tensor::random(vec![unit, input_size], 0));
+        }
+
         for iteration in 0..epochs {
             let mut error = 0.0;
 
@@ -31,33 +39,40 @@ impl Sequential {
             for i in 0..x_train.shape[0] {
                 // SGD implementation below
 
-                // forward propagation
+                // Forward propagation
                 let mut outputs: Vec<Tensor> = Vec::new();
-                outputs.push(x_train.get_row(i));
-
-                for l in &self.layers {
-                    let layer_l =  l.weights.dot(&outputs.last().unwrap()).map(activation::relu);
-                    outputs.push(layer_l);
+                // ouput of the first layer is the training sample...
+                outputs.push(x_train.get_row(i).get_transpose());
+                for w in &weights {
+                    let output =  (w * &outputs.last().unwrap()).map(activation::relu);
+                    outputs.push(output);
                 }
-
+                
+                // Compute error
                 error += (outputs.last().unwrap() - &y_train.get_row(i))[0].powi(2);
-                // compute gradient
+
+                // Compute backward pass
                 let mut gradients: Vec<Tensor> = Vec::new();
                 
-                gradients.push(outputs.last().unwrap() - &y_train.get_row(i));
-                
-                for (j, l) in self.layers.iter().skip(0).rev().enumerate() {
-                    let gradient_dot = l.weights.dot(gradients.last().unwrap());
-                    let gradient = gradient_dot.dot(&outputs[outputs.len() -2 - j].map(activation::relu2deriv)); // FIX here
+                // First gradient (delta L)
+                let gradient = outputs.last().unwrap() - &y_train.get_row(i);
+                gradients.push(gradient.mult_el(&(weights.last().unwrap() * &outputs[outputs.len() - 2]).map(activation::relu2deriv)));
+
+                // Other gradients (delta i)
+                for (i, w) in weights.iter().skip(1).rev().enumerate() {
+                    let left_gradient = &w.get_transpose() * &gradients.last().unwrap();
+                    let right_gradient = (&weights[weights.len() - 2 - i] * &outputs[outputs.len() - 3 -i]).map(activation::relu2deriv);
+                    let gradient = left_gradient.mult_el(&right_gradient);
                     gradients.push(gradient);
                 }
 
-                // back propagation
-                for (i, l) in self.layers.iter_mut().rev().enumerate() {
-                    l.weights -= alpha * (&outputs[outputs.len() - i -2].get_transpose() * &gradients[i]); // Possible FIX here
+                // Weight update
+                for (i, w) in weights.iter_mut().enumerate() {
+                    *w -= alpha * (&gradients[gradients.len() - 1 - i] * &outputs[i].get_transpose());
                 }
+                
             }
-
+            
             if verbose {
                 if iteration % 10 == 9 {
                     println!("Error: {}", error);

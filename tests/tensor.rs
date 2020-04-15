@@ -4,6 +4,7 @@ mod tensor_tests {
     
     #[test]
     fn test_0d_add() {
+        // Scalar
         let a = Tensor::new(vec![1.0], vec![]);
         let b = Tensor::new(vec![2.0], vec![]);
 
@@ -80,5 +81,24 @@ mod tensor_tests {
                                       vec![2, 2]);
         
         assert_eq!(a.map(relu), result);
+    }
+
+    #[test]
+    fn test_sub_assign() {
+        let mut a = Tensor::new(vec![1.0, -2.0,
+                                    -3.0,  4.0],
+                                     vec![2, 2]);
+
+        let b = Tensor::new(vec![1.0, 2.0,
+                                 1.0, 2.0],
+                                 vec![2, 2]);
+
+        let result = Tensor::new(vec![0.0, -4.0,
+                                     -4.0, 2.0],
+                                      vec![2, 2]);
+        
+        a -= b;
+
+        assert_eq!(a, result);
     }
 }
