@@ -70,17 +70,19 @@ mod tensor_tests {
 
     #[test]
     fn test_map() {
+        fn relu() -> fn(f64) -> f64 {
+            |x| if x < 0.0 { 0.0 } else { x }
+        }
+        
         let a = Tensor::new(vec![1.0, -2.0,
                                 -3.0,  4.0],
                                  vec![2, 2]);
-
-        let relu = |x| if x < 0.0 { 0.0 } else { x };
 
         let result = Tensor::new(vec![1.0, 0.0,
                                       0.0, 4.0],
                                       vec![2, 2]);
         
-        assert_eq!(a.map(relu), result);
+        assert_eq!(a.map(&relu()), result);
     }
 
     #[test]
