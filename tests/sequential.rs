@@ -2,6 +2,7 @@
 mod sequential_tests {
     use newron::sequential::Sequential;
     use newron::layer::Layer;
+    use newron::activation::Activation;
     
     #[test]
     fn test_sequential_stacking() {

@@ -31,15 +31,9 @@ impl Activation {
             ActivationFunction::Sigmoid => sigmoid_deriv
         }
     }
-
-
-
-
-   
-
 }
 
-fn relu_activation(x: f64) -> f64 {
+pub fn relu_activation(x: f64) -> f64 {
     if x < 0.0 {
         0.0
     } else {
@@ -47,7 +41,7 @@ fn relu_activation(x: f64) -> f64 {
     }
 }
 
-fn relu_deriv(x: f64) -> f64 {
+pub fn relu_deriv(x: f64) -> f64 {
     if x < 0.0 {
         0.0
     } else {
@@ -55,10 +49,10 @@ fn relu_deriv(x: f64) -> f64 {
     }
 }
 
-fn sigmoid_activation(x: f64) -> f64 {
+pub fn sigmoid_activation(x: f64) -> f64 {
     1. / (1. + (-x).exp())
 }
 
-fn sigmoid_deriv(x: f64) -> f64 { 
+pub fn sigmoid_deriv(x: f64) -> f64 { 
     sigmoid_activation(x) * (1. - sigmoid_activation(x))
 }
