@@ -22,7 +22,7 @@ impl Sequential {
     /// Use this function to train the model on x_train with target y_train.
     /// Set `verbose` to true to see debugging and training information.
     pub fn fit(&mut self, x_train: Tensor, y_train: Tensor, epochs: u32, verbose: bool) {
-        let alpha = 0.002;
+        let alpha = 0.02;
 
         // Initialize weights with random values
         let mut weights: Vec<Tensor> = Vec::new();
@@ -43,8 +43,8 @@ impl Sequential {
                 let mut outputs: Vec<Tensor> = Vec::new();
                 // ouput of the first layer is the training sample...
                 outputs.push(x_train.get_row(i).get_transpose());
-                for w in &weights {
-                    let output =  (w * &outputs.last().unwrap()).map(activation::relu);
+                for (i, w) in weights.iter().enumerate() {
+                    let output =  (w * &outputs.last().unwrap()).map(&self.layers[i].activation.activation());
                     outputs.push(output);
                 }
                 
@@ -56,12 +56,12 @@ impl Sequential {
                 
                 // First gradient (delta L)
                 let gradient = outputs.last().unwrap() - &y_train.get_row(i);
-                gradients.push(gradient.mult_el(&(weights.last().unwrap() * &outputs[outputs.len() - 2]).map(activation::relu2deriv)));
+                gradients.push(gradient.mult_el(&(weights.last().unwrap() * &outputs[outputs.len() - 2]).map(&self.layers.last().unwrap().activation.deriv_activation())));
 
                 // Other gradients (delta i)
                 for (i, w) in weights.iter().skip(1).rev().enumerate() {
                     let left_gradient = &w.get_transpose() * &gradients.last().unwrap();
-                    let right_gradient = (&weights[weights.len() - 2 - i] * &outputs[outputs.len() - 3 -i]).map(activation::relu2deriv);
+                    let right_gradient = (&weights[weights.len() - 2 - i] * &outputs[outputs.len() - 3 -i]).map(&self.layers[self.layers.len() - 2 - i].activation.deriv_activation());
                     let gradient = left_gradient.mult_el(&right_gradient);
                     gradients.push(gradient);
                 }
