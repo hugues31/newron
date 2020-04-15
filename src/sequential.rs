@@ -5,7 +5,7 @@ use crate::activation;
 use crate::tensor::Tensor;
 
 pub struct Sequential {
-    layers: Vec<Layer>,
+    pub layers: Vec<Layer>,
 }
 
 impl Sequential {
