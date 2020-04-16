@@ -28,5 +28,8 @@ fn main() {
     model.add(layer_2);
     model.add(layer_3);
 
-    model.fit(x_train, y_train, 10_000, true);
+    model.fit(&x_train, &y_train, 2_000, true);
+
+    let prediction = model.predict(&x_train.get_row(2));
+    println!("Prediction for 0.0, 0.0, 1.0 : {}", &prediction);
 }

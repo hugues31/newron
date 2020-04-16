@@ -5,7 +5,7 @@ use crate::random::Rand;
 use std::ops::{Add, Sub, SubAssign, Mul, Index};
 use std::fmt;
 
-
+#[derive(Clone)]
 pub struct Tensor {
     pub data: Vec<f64>,
     pub shape: Vec<usize>
