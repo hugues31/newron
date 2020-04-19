@@ -52,7 +52,7 @@ impl Tensor {
 				result.push(1.0);
 			}
 		}
-		// TODO: seed en parametre ?
+		// TODO: add seed as argument ?
 		let mut rng = Rand::new(0);
         rng.shuffle(&mut result[..]);
 
