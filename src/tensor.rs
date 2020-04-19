@@ -39,7 +39,7 @@ impl Tensor {
         Tensor { data, shape }
     }
 
-	pub fn mask(shape: &Vec<usize>, prob: f32) -> Tensor {
+	pub fn mask(shape: &Vec<usize>, prob: f32, seed: u32) -> Tensor {
 		let mut result = vec![];
 		let number_values = shape.iter().product();
 
@@ -52,9 +52,8 @@ impl Tensor {
 				result.push(1.0);
 			}
 		}
-		// TODO: add seed as argument ?
-		let mut rng = Rand::new(0);
-        rng.shuffle(&mut result[..]);
+		let mut rng = Rand::new(seed);
+                rng.shuffle(&mut result[..]);
 
 		Tensor::new(result, shape.to_vec())
 	}

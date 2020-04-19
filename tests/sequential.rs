@@ -8,8 +8,8 @@ mod sequential_tests {
     fn test_sequential_stacking() {
         let mut model = Sequential::new();
 
-        let layer_1 = Layer::new(Activation::relu(), 5, 0.0);
-        let layer_2 = Layer::new(Activation::relu(), 7, 0.0);
+        let layer_1 = Layer::new(Activation::relu(), 5, 0.0, 777);
+        let layer_2 = Layer::new(Activation::relu(), 7, 0.0, 777);
 
         model.add(layer_1);
         model.add(layer_2);

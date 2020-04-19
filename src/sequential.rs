@@ -28,19 +28,19 @@ impl Sequential {
         // ouput of the first layer is the training sample...
         outputs.push(input.get_transpose());
         for (i, w) in self.weights.iter().enumerate() {
-			
-			if train {
-				let dropout = &self.layers[i].dropout;
-				let dropout_mask = Tensor::mask(&w.shape, *dropout);
-				let output =
-                    (&((1.0 / (1.0 - dropout)) * w.mult_el(&dropout_mask)) * outputs.last().unwrap()).map(&self.layers[i].activation.activation());
+            if train {
+                let dropout = &self.layers[i].dropout;
+                let dropout_mask = Tensor::mask(&w.shape, *dropout, self.layers[i].seed);
+                let output = (&((1.0 / (1.0 - dropout)) * w.mult_el(&dropout_mask))
+                    * outputs.last().unwrap())
+                .map(&self.layers[i].activation.activation());
 
-				outputs.push(output);
-			} else {
-				let output =
-					(w * &outputs.last().unwrap()).map(&self.layers[i].activation.activation());
-				outputs.push(output);
-			}
+                outputs.push(output);
+            } else {
+                let output =
+                    (w * &outputs.last().unwrap()).map(&self.layers[i].activation.activation());
+                outputs.push(output);
+            }
         }
 
         outputs
@@ -117,9 +117,10 @@ impl Sequential {
 
     pub fn predict(&self, input: &Tensor) -> Tensor {
         // The output of the network is the last layer output
+
         match self.forward_propagation(input, false).last() {
             Some(x) => x.clone(),
-            None => panic!("No prediction.")
+            None => panic!("No prediction."),
         }
     }
 }
