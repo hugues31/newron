@@ -3,7 +3,7 @@ use crate::activation::Activation;
 pub struct Layer {
     pub activation: Activation,
     pub unit: usize,
-    dropout: f32
+    pub dropout: f32
 }
 
 impl Layer {

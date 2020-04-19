@@ -39,6 +39,26 @@ impl Tensor {
         Tensor { data, shape }
     }
 
+	pub fn mask(shape: &Vec<usize>, prob: f32) -> Tensor {
+		let mut result = vec![];
+		let number_values = shape.iter().product();
+
+		for i in 0.. number_values {
+			let t = (prob * number_values as f32) as usize;
+			if i < t {
+				result.push(0.0);
+			} 
+			else {
+				result.push(1.0);
+			}
+		}
+		// TODO: add seed as argument ?
+		let mut rng = Rand::new(0);
+        rng.shuffle(&mut result[..]);
+
+		Tensor::new(result, shape.to_vec())
+	}
+
     /// Transpose matrix. Only for 2 dimensionals Tensor (matrix)
     pub fn transpose(&mut self) {
         // TODO: add check for dimension
@@ -248,6 +268,29 @@ impl Mul<Tensor> for f64 {
         }
     }
 }
+
+impl Mul<f32> for Tensor {
+    type Output = Tensor;
+
+    fn mul(self, other: f32) -> Tensor {
+        Tensor {
+            data: self.data.iter().map(|a| a * other as f64).collect(),
+            shape: self.shape.to_vec()
+        }
+    }
+}
+
+impl Mul<Tensor> for f32 {
+    type Output = Tensor;
+
+    fn mul(self, other: Tensor) -> Tensor {
+        Tensor {
+            data: other.data.iter().map(|a| a * self as f64).collect(),
+            shape: other.shape.to_vec()
+        }
+    }
+}
+
 
 impl Mul<Tensor> for Tensor {
     type Output = Tensor;
