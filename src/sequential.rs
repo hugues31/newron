@@ -5,6 +5,7 @@ use crate::tensor::Tensor;
 pub struct Sequential {
     pub layers: Vec<Layer>,
     weights: Vec<Tensor>,
+    seed: u32
 }
 
 impl Sequential {
@@ -13,7 +14,18 @@ impl Sequential {
         Sequential {
             layers: vec![],
             weights: vec![],
+	    seed: 0
         }
+    }
+
+    // Immutable access.
+    fn get_seed(&self) -> &u32 {
+        &self.seed
+    }
+
+    // Mutable access.
+    pub fn set_seed(&mut self, s: u32) {
+        self.seed = s;
     }
 
     /// Add a layer to the model
@@ -30,7 +42,8 @@ impl Sequential {
         for (i, w) in self.weights.iter().enumerate() {
             if train {
                 let dropout = &self.layers[i].dropout;
-                let dropout_mask = Tensor::mask(&w.shape, *dropout, self.layers[i].seed);
+                let seed_layer_i = &self.seed + i as u32;// + input_layer_i;
+                let dropout_mask = Tensor::mask(&w.shape, *dropout, seed_layer_i);
                 let output = (&((1.0 / (1.0 - dropout)) * w.mult_el(&dropout_mask))
                     * outputs.last().unwrap())
                 .map(&self.layers[i].activation.activation());
@@ -60,7 +73,7 @@ impl Sequential {
             } else {
                 self.layers[i - 1].unit
             };
-            self.weights.push(Tensor::random(vec![unit, input_size], 0));
+            self.weights.push(Tensor::random(vec![unit, input_size], self.seed));
         }
 
         for iteration in 0..epochs {

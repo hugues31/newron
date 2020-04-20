@@ -2,36 +2,39 @@
 
 use crate::random::Rand;
 
-use std::ops::{Add, Sub, SubAssign, Mul, Index};
 use std::fmt;
+use std::ops::{Add, Index, Mul, Sub, SubAssign};
 
 #[derive(Clone)]
 pub struct Tensor {
     pub data: Vec<f64>,
-    pub shape: Vec<usize>
+    pub shape: Vec<usize>,
 }
 
 impl Tensor {
     /// Creates a new Tensor from `data` with the `shape` specified.
-    pub fn new (data: Vec<f64>, shape: Vec<usize>) -> Tensor {
+    pub fn new(data: Vec<f64>, shape: Vec<usize>) -> Tensor {
         Tensor { data, shape }
     }
 
     /// Creates a Tensor filled with zeroes with the `shape` specified.
     pub fn zero(shape: Vec<usize>) -> Tensor {
-        Tensor { data: vec![0.0; shape.iter().product()], shape }
+        Tensor {
+            data: vec![0.0; shape.iter().product()],
+            shape,
+        }
     }
 
     /// Creates a Tensor filled with random values between -1 and +1 with the
     /// `shape` specified.
     pub fn random(shape: Vec<usize>, seed: u32) -> Tensor {
         let mut rng = Rand::new(seed);
-    
+
         // Throw a dice 100 times
         let number_values = shape.iter().product();
         let data: Vec<f64> = (0..number_values).map(|_| rng.rand_float()).collect();
         // println!("{:?}",data);
-    
+
         // Shuffle an array
         // let mut v: Vec<u32> = (1..101).collect();
         // rng.shuffle(&mut v);
@@ -39,24 +42,23 @@ impl Tensor {
         Tensor { data, shape }
     }
 
-	pub fn mask(shape: &Vec<usize>, prob: f32, seed: u32) -> Tensor {
-		let mut result = vec![];
-		let number_values = shape.iter().product();
+    pub fn mask(shape: &Vec<usize>, prob: f32, seed: u32) -> Tensor {
+        let mut result = vec![];
+        let number_values = shape.iter().product();
 
-		for i in 0.. number_values {
-			let t = (prob * number_values as f32) as usize;
-			if i < t {
-				result.push(0.0);
-			} 
-			else {
-				result.push(1.0);
-			}
-		}
-		let mut rng = Rand::new(seed);
-                rng.shuffle(&mut result[..]);
+        for i in 0..number_values {
+            let t = (prob * number_values as f32) as usize;
+            if i < t {
+                result.push(0.0);
+            } else {
+                result.push(1.0);
+            }
+        }
+        let mut rng = Rand::new(seed);
+        rng.shuffle(&mut result[..]);
 
-		Tensor::new(result, shape.to_vec())
-	}
+        Tensor::new(result, shape.to_vec())
+    }
 
     /// Transpose matrix. Only for 2 dimensionals Tensor (matrix)
     pub fn transpose(&mut self) {
@@ -68,7 +70,7 @@ impl Tensor {
     pub fn get_transpose(&self) -> Tensor {
         Tensor {
             data: self.data.to_vec(),
-            shape: vec![self.shape[1], self.shape[0]]
+            shape: vec![self.shape[1], self.shape[0]],
         }
     }
 
@@ -83,8 +85,8 @@ impl Tensor {
     pub fn get_row(&self, i: usize) -> Tensor {
         // TODO: add check for dimension
         Tensor {
-            data: self.data[i*&self.shape[1]..(i+1)*&self.shape[1]].to_vec(),
-            shape: vec![1, self.shape[1]]
+            data: self.data[i * &self.shape[1]..(i + 1) * &self.shape[1]].to_vec(),
+            shape: vec![1, self.shape[1]],
         }
     }
 
@@ -93,7 +95,7 @@ impl Tensor {
     pub fn map(&self, f: &fn(f64) -> f64) -> Tensor {
         Tensor {
             data: self.data.to_vec().into_iter().map(f).collect(),
-            shape: self.shape.to_vec()
+            shape: self.shape.to_vec(),
         }
     }
 
@@ -117,12 +119,10 @@ impl Tensor {
                 }
 
                 sum_product.push(t);
-
             }
 
             return Tensor::new(sum_product, vec![1, self.shape[1]]);
-        }
-        else {
+        } else {
             unimplemented!("Dot function not complete yet.")
         }
     }
@@ -132,8 +132,12 @@ impl Tensor {
         assert_eq!(self.shape, other.shape);
 
         Tensor::new(
-            self.data.iter().zip(other.data.iter()).map(|(a, b)| a * b).collect(),
-            self.shape.to_vec()
+            self.data
+                .iter()
+                .zip(other.data.iter())
+                .map(|(a, b)| a * b)
+                .collect(),
+            self.shape.to_vec(),
         )
     }
 }
@@ -143,14 +147,18 @@ impl<'a, 'b> Add<&'b Tensor> for &'b Tensor {
     type Output = Tensor;
 
     fn add(self, other: &'b Tensor) -> Tensor {
-
         if self.shape != other.shape {
             panic!("Could not add 2 tensors of different");
         }
 
         Tensor {
-            data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a + b).collect(),
-            shape: self.shape.to_vec()
+            data: self
+                .data
+                .iter()
+                .zip(other.data.iter())
+                .map(|(a, b)| a + b)
+                .collect(),
+            shape: self.shape.to_vec(),
         }
     }
 }
@@ -169,14 +177,18 @@ impl<'a, 'b> Sub<&'b Tensor> for &'b Tensor {
     type Output = Tensor;
 
     fn sub(self, other: &'b Tensor) -> Tensor {
-
         if self.shape != other.shape {
             panic!("Could not substract 2 tensors of different");
         }
 
         Tensor {
-            data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a - b).collect(),
-            shape: self.shape.to_vec()
+            data: self
+                .data
+                .iter()
+                .zip(other.data.iter())
+                .map(|(a, b)| a - b)
+                .collect(),
+            shape: self.shape.to_vec(),
         }
     }
 }
@@ -186,14 +198,19 @@ impl<'a, 'b> Sub<&'b Tensor> for &'b Tensor {
 impl SubAssign for Tensor {
     fn sub_assign(&mut self, other: Self) {
         *self = Self {
-            data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a - b).collect(),
-            shape: self.shape.to_vec()
+            data: self
+                .data
+                .iter()
+                .zip(other.data.iter())
+                .map(|(a, b)| a - b)
+                .collect(),
+            shape: self.shape.to_vec(),
         };
     }
 }
 
 // Implement multiplication for tensor
-impl<'a, 'b> Mul<&'b Tensor> for  &'a Tensor {
+impl<'a, 'b> Mul<&'b Tensor> for &'a Tensor {
     type Output = Tensor;
 
     fn mul(self, other: &'b Tensor) -> Tensor {
@@ -204,17 +221,22 @@ impl<'a, 'b> Mul<&'b Tensor> for  &'a Tensor {
         Tensor {
             data: match self.shape.len() {
                 0 => vec![self.data[0] * other.data[0]],
-                1 => self.data.iter().zip(other.data.iter()).map(|(a, b)| a * b).collect(),
+                1 => self
+                    .data
+                    .iter()
+                    .zip(other.data.iter())
+                    .map(|(a, b)| a * b)
+                    .collect(),
                 2 => {
                     // if # of cols of A is != # rows of B
                     if self.shape[1] != other.shape[0] {
                         panic!("Could not multiply matrix if # cols of A is different # rows of B.\nA: {:?}\nB: {:?}", self, other);
                     }
-                    
+
                     // C = A*B = (m,n) * (n, k) = (m, k)
 
-                    let m = self.shape[0];  // # rows of A
-                    let n = self.shape[1];  // # cols of A
+                    let m = self.shape[0]; // # rows of A
+                    let n = self.shape[1]; // # cols of A
                     let k = other.shape[1]; // # cols of B
 
                     // let mut c: Vec<f64> = Vec::with_capacity(m * k);
@@ -231,18 +253,17 @@ impl<'a, 'b> Mul<&'b Tensor> for  &'a Tensor {
 
                     c
                 }
-                _ => unimplemented!("Multiplication not implemented for Tensor of dimension > 2")
+                _ => unimplemented!("Multiplication not implemented for Tensor of dimension > 2"),
             },
 
             shape: match &self.shape.len() {
                 0 => self.shape.to_vec(), // empty vec
                 1 | 2 => vec![self.shape[0], other.shape[1]],
-                _ => panic!("unsupported dimension*")
-            }
+                _ => panic!("unsupported dimension*"),
+            },
         }
     }
 }
-
 
 // Implement multiplication for tensor with scalar (f64)
 // Multiplication is element-wise in this case
@@ -252,7 +273,7 @@ impl Mul<f64> for Tensor {
     fn mul(self, other: f64) -> Tensor {
         Tensor {
             data: self.data.iter().map(|a| a * other).collect(),
-            shape: self.shape.to_vec()
+            shape: self.shape.to_vec(),
         }
     }
 }
@@ -263,7 +284,7 @@ impl Mul<Tensor> for f64 {
     fn mul(self, other: Tensor) -> Tensor {
         Tensor {
             data: other.data.iter().map(|a| a * self).collect(),
-            shape: other.shape.to_vec()
+            shape: other.shape.to_vec(),
         }
     }
 }
@@ -274,7 +295,7 @@ impl Mul<f32> for Tensor {
     fn mul(self, other: f32) -> Tensor {
         Tensor {
             data: self.data.iter().map(|a| a * other as f64).collect(),
-            shape: self.shape.to_vec()
+            shape: self.shape.to_vec(),
         }
     }
 }
@@ -285,11 +306,10 @@ impl Mul<Tensor> for f32 {
     fn mul(self, other: Tensor) -> Tensor {
         Tensor {
             data: other.data.iter().map(|a| a * self as f64).collect(),
-            shape: other.shape.to_vec()
+            shape: other.shape.to_vec(),
         }
     }
 }
-
 
 impl Mul<Tensor> for Tensor {
     type Output = Tensor;
@@ -318,9 +338,9 @@ impl PartialEq for Tensor {
 impl fmt::Debug for Tensor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Tensor")
-         .field("data", &format_args!("{}", self))
-         .field("shape", &self.shape)
-         .finish()
+            .field("data", &format_args!("{}", self))
+            .field("shape", &self.shape)
+            .finish()
     }
 }
 
@@ -341,7 +361,7 @@ impl fmt::Display for Tensor {
                     result += &el.to_string();
                 }
                 write!(f, "[{}]", result)
-            },
+            }
             2 => {
                 let mut result = String::from("\n");
                 for row in 0..self.shape[0] {
@@ -353,8 +373,7 @@ impl fmt::Display for Tensor {
                 }
                 write!(f, "{}", result)
             }
-            _ => unimplemented!()
+            _ => unimplemented!(),
         }
-        
     }
 }

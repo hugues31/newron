@@ -19,10 +19,11 @@ fn main() {
             vec![4,1]);
 
     let mut model = Sequential::new();
+    model.set_seed(777);
     
-    let hidden_layer_1 = Layer::new(Activation::relu(), 5, 0.0, 777);
-    let hidden_layer_2 = Layer::new(Activation::tanh(), 8, 0.07, 777);
-    let output_layer = Layer::new(Activation::relu(), 1, 0.0, 777);
+    let hidden_layer_1 = Layer::new(Activation::relu(), 5, 0.0);
+    let hidden_layer_2 = Layer::new(Activation::tanh(), 8, 0.07);
+    let output_layer = Layer::new(Activation::relu(), 1, 0.0);
 
     model.add(hidden_layer_1);
     model.add(hidden_layer_2);
