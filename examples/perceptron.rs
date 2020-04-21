@@ -1,22 +1,19 @@
-use newron::sequential::Sequential;
-use newron::layer::Layer;
-use newron::tensor::Tensor;
 use newron::activation::Activation;
+use newron::dataset::Dataset;
+use newron::layer::Layer;
+use newron::sequential::Sequential;
 
 fn main() {
-    let x_train = Tensor::new(vec![
-            1.0, 0.0, 1.0,
-            0.0, 1.0, 1.0,
-            0.0, 0.0, 1.0,
-            1.0, 1.0, 1.0],
-            vec![4,3]);
-
-    let y_train = Tensor::new(vec![
-            1.0,
-            1.0,
-            0.0,
-            0.0],
-            vec![4,1]);
+    // Let's create a toy dataset
+    let dataset = Dataset::from_raw_data(
+            vec![
+                //   X_0, X_1, X_2, Y
+                vec![1.0, 0.0, 1.0, 1.0],
+                vec![0.0, 1.0, 1.0, 1.0],
+                vec![0.0, 0.0, 1.0, 0.0],
+                vec![1.0, 1.0, 1.0, 0.0],
+            ]
+    ).unwrap();
 
     let mut model = Sequential::new();
     
@@ -28,9 +25,10 @@ fn main() {
     model.add(hidden_layer_2);
     model.add(output_layer);
 
-    model.fit(&x_train, &y_train, 2_000, true);
+    model.fit(&dataset, 2_000, true);
 
-    let prediction = model.predict(&x_train.get_row(2));
+    let features_to_predict = vec![0.0, 0.0, 1.0];
+    let prediction = model.predict(&features_to_predict);
 
-    println!("Prediction for 0.0, 0.0, 1.0 : {}", &prediction);
+    println!("Prediction for {:?} : {}", &features_to_predict, &prediction);
 }
