@@ -16,3 +16,7 @@ license = "MIT"
 [[example]]
 name = "perceptron"
 path = "examples/perceptron.rs"
+
+[[example]]
+name = "mnist"
+path = "examples/mnist.rs"

@@ -1,13 +1,15 @@
 use std::fmt;
 use std::path::Path;
 use std::cmp;
+use std::fs::File;
+use std::io::Read;
 
 use crate::tensor::Tensor;
 
 #[derive(Debug)]
 pub enum DatasetError {
     FileNotFound,
-    BadFormat,
+    BadFormat(String),
 }
 
 /// Use `Dataset` to load your dataset and train
@@ -37,9 +39,9 @@ impl Dataset {
         let mut feature_cols = Vec::new();
         let mut target_cols = Vec::new();
 
-        // test that all rows in 'data' have equals length
+        // test that all rows in 'data' have equal lengths
         if data.iter().any(|ref v| v.len() != data[0].len()) {
-            return Err(DatasetError::BadFormat);
+            return Err(DatasetError::BadFormat(format!("All rows must have equal lengths.")));
         }
 
         // iterate through training features
@@ -63,6 +65,55 @@ impl Dataset {
         unimplemented!();
     }
 
+    pub fn from_ubyte(path: &Path) -> Result<Dataset, DatasetError> {
+        let mut labels_file = File::open(path.join("train-labels-idx1-ubyte")).unwrap();
+        let mut images_file = File::open(path.join("train-images-idx3-ubyte")).unwrap();
+
+        let mut buf = [0u8;4];
+        images_file.read(&mut buf).unwrap();
+        let magic_number = swap_endian(as_u32_le(&buf));
+        assert_eq!(magic_number, 2051, "Incorrect magic number for a image file.");
+
+        let mut buf = [0u8;4];
+        labels_file.read(&mut buf).unwrap();
+        let magic_number = swap_endian(as_u32_le(&buf));
+        assert_eq!(magic_number, 2049, "Incorrect magic number for a label file.");
+        
+        images_file.read(&mut buf).unwrap();
+        let number_images = swap_endian(as_u32_le(&buf));
+        
+        labels_file.read(&mut buf).unwrap();
+        let number_labels = swap_endian(as_u32_le(&buf));
+
+        assert_eq!(number_images, number_labels, "Number of images and label must be identical.");
+
+        images_file.read(&mut buf).unwrap();
+        let rows = swap_endian(as_u32_le(&buf)); // =28
+
+        images_file.read(&mut buf).unwrap();
+        let cols = swap_endian(as_u32_le(&buf)); // =28
+    
+        let mut label: u32 = 0;
+        let vector_size = (rows * cols) as usize;
+
+        for i in 0..number_images {
+            // read image pixel
+            let mut buf = vec![0u8;vector_size];
+            images_file.read(&mut buf).unwrap();
+            println!("Pixel : {:?}", buf);
+
+            // read label
+            let mut buf = [0u8;1];
+            labels_file.read(&mut buf).unwrap();
+            let label = buf[0];
+            println!("Cat : {}", label);
+        }
+
+
+        unimplemented!();
+    }
+
+    /// Get the train features
     pub fn get_train(&self) -> Tensor {
         let rows = self.data.len();
         let cols = self.feature_cols.len();
@@ -78,6 +129,7 @@ impl Dataset {
         Tensor::new(train, shape)
     }
 
+    /// Get the target features
     pub fn get_target(&self) -> Tensor {
         let rows = self.data.len();
         let cols = self.target_cols.len();
@@ -147,4 +199,23 @@ impl fmt::Display for Dataset {
         
         write!(f, "{}", result)
     }
+}
+
+fn swap_endian(val: u32) -> u32 {
+    let result = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);
+    return (result << 16) | (result >> 16);
+}
+
+fn as_u32_be(array: &[u8; 4]) -> u32 {
+    ((array[0] as u32) << 24) +
+    ((array[1] as u32) << 16) +
+    ((array[2] as u32) <<  8) +
+    ((array[3] as u32) <<  0)
+}
+
+fn as_u32_le(array: &[u8; 4]) -> u32 {
+    ((array[0] as u32) <<  0) +
+    ((array[1] as u32) <<  8) +
+    ((array[2] as u32) << 16) +
+    ((array[3] as u32) << 24)
 }
