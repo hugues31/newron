@@ -28,22 +28,23 @@ impl Sequential {
         self.seed = s;
     }
 
-    /// Add a layer to the model
+    // Add a layer to the model
     pub fn add(&mut self, layer: Layer) {
         self.layers.push(layer);
     }
 
     // Return the list of layer outputs given an input
-    fn forward_propagation(&self, input: &Tensor, train: bool) -> Vec<Tensor> {
+    fn forward_propagation(&mut self, input: &Tensor, train: bool) -> Vec<Tensor> {
         // Forward propagation
         let mut outputs: Vec<Tensor> = Vec::new();
         // ouput of the first layer is the training sample...
         outputs.push(input.get_transpose());
+        self.seed = &self.seed + 1;
         for (i, w) in self.weights.iter().enumerate() {
             if train {
                 let dropout = &self.layers[i].dropout;
-                let seed_layer_i = &self.seed + i as u32; // + input_layer_i;
-                let dropout_mask = Tensor::mask(&w.shape, *dropout, seed_layer_i);
+                let dropout_mask = Tensor::mask(&w.shape, *dropout, self.seed);
+
                 let output = (&((1.0 / (1.0 - dropout)) * w.mult_el(&dropout_mask))
                     * outputs.last().unwrap())
                 .map(&self.layers[i].activation.activation());
@@ -129,9 +130,8 @@ impl Sequential {
         }
     }
 
-    pub fn predict(&self, input: &Tensor) -> Tensor {
+    pub fn predict(&mut self, input: &Tensor) -> Tensor {
         // The output of the network is the last layer output
-
         match self.forward_propagation(input, false).last() {
             Some(x) => x.clone(),
             None => panic!("No prediction."),
