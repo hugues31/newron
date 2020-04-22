@@ -36,6 +36,12 @@ impl Dataset {
         let mut header = Vec::new();
         let mut feature_cols = Vec::new();
         let mut target_cols = Vec::new();
+
+        // test that all rows in 'data' have equals length
+        if data.iter().any(|ref v| v.len() != data[0].len()) {
+            return Err(DatasetError::BadFormat);
+        }
+
         // iterate through training features
         for i in 0..cols - 1 {
             header.push(format!("X_{}", i));
