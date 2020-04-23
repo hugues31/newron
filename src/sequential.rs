@@ -1,7 +1,7 @@
 /// The Sequential model is a linear stack of layers.
 use crate::layer::Layer;
 use crate::tensor::Tensor;
-use crate::dataset::Dataset;
+use crate::dataset::{Dataset, RowType, ColumnType};
 
 pub struct Sequential {
     pub layers: Vec<Layer>,
@@ -50,8 +50,8 @@ impl Sequential {
     /// Use this function to train the model on x_train with target y_train.
     /// Set `verbose` to true to see debugging and training information.
     pub fn fit(&mut self, dataset: &Dataset, epochs: u32, verbose: bool) {
-        let x_train = dataset.get_train(); 
-        let y_train = dataset.get_target();
+        let x_train = dataset.get_tensor(RowType::Train, ColumnType::Feature); 
+        let y_train = dataset.get_tensor(RowType::Train, ColumnType::Target);
 
         let alpha = 0.02;
 

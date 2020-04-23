@@ -14,9 +14,21 @@ pub enum ColumnType {
     Skip     // column not used by the model
 }
 
-pub struct Column {
+#[derive(PartialEq, Clone, Copy)]
+pub enum RowType {
+    Train,  // row is used for training
+    Test,   // row is preserved for test
+    Skip    // row is ignored
+}
+
+pub struct ColumnMetadata {
     name: String,
     column_type: ColumnType
+}
+
+pub struct Row {
+    data: Vec<f64>,
+    row_type: RowType
 }
 
 #[derive(Debug)]
@@ -29,8 +41,8 @@ pub enum DatasetError {
 /// a model on it.
 pub struct Dataset {
     // Contains all data for dataset
-    data: Vec<Vec<f64>>, //TODO: refactor into Vec<Row>
-    columns: Vec<Column>
+    data: Vec<Row>,
+    columns_metadata: Vec<ColumnMetadata>
 }
 
 impl Dataset {
@@ -43,7 +55,7 @@ impl Dataset {
     pub fn from_raw_data(data: Vec<Vec<f64>>) -> Result<Dataset, DatasetError> {
         let cols = data[0].len();
 
-        let mut columns = Vec::new();
+        let mut columns_metadata = Vec::new();
 
         // test that all rows in 'data' have equal lengths
         if data.iter().any(|ref v| v.len() != data[0].len()) {
@@ -52,14 +64,19 @@ impl Dataset {
 
         // iterate through training features
         for i in 0..cols - 1 {
-            columns.push(Column {name: format!("X_{}", i), column_type: ColumnType::Feature})
+            columns_metadata.push(ColumnMetadata {name: format!("X_{}", i), column_type: ColumnType::Feature})
         }
 
-        columns.push(Column {name: format!("Y"), column_type: ColumnType::Target});
+        columns_metadata.push(ColumnMetadata {name: format!("Y"), column_type: ColumnType::Target});
+
+        let mut rows = Vec::new();
+        for el in data {
+            rows.push(Row{data: el, row_type: RowType::Train});
+        }
 
         Ok(Dataset {
-            data,
-            columns,
+            data: rows,
+            columns_metadata,
         })
     }
 
@@ -67,9 +84,9 @@ impl Dataset {
         unimplemented!();
     }
 
-    pub fn from_ubyte(path: &Path) -> Result<Dataset, DatasetError> {
-        let mut labels_file = File::open(path.join("train-labels-idx1-ubyte")).unwrap();
-        let mut images_file = File::open(path.join("train-images-idx3-ubyte")).unwrap();
+    fn load_ubyte(path: &Path, dataset: String) -> Result<Dataset, DatasetError> {
+        let mut labels_file = File::open(path.join(format!("{}-labels-idx1-ubyte", dataset))).unwrap();
+        let mut images_file = File::open(path.join(format!("{}-images-idx3-ubyte", dataset))).unwrap();
 
         let mut buf = [0u8;4];
         images_file.read(&mut buf).unwrap();
@@ -113,13 +130,42 @@ impl Dataset {
             pixels.append(&mut utils::to_vec_f64(&label));
             data.push(pixels);
         }
+        
+        let mut dataset = Dataset::from_raw_data(data).unwrap();
 
         // At this point, the last col is the label
         // We must one-hot-encode it
-        let mut dataset = Dataset::from_raw_data(data).unwrap();
         dataset.one_hot_encode(vector_size);
 
         Ok(dataset)
+    }
+
+    pub fn from_ubyte(path: &Path) -> Result<Dataset, DatasetError> {
+        let train_dataset = Dataset::load_ubyte(path, "train".to_string()).unwrap();
+        let mut test_dataset = Dataset::load_ubyte(path, "t10k".to_string()).unwrap();
+        // set all rows to "test" type for the test_dataset
+        test_dataset.set_all_rows_type(RowType::Test);
+        // Add train dataset inside test dataset
+        test_dataset.concatenate(train_dataset);
+        Ok(test_dataset)
+    }
+
+    /// Set the row type to `row_type` at the `index` specified.
+    pub fn set_row_type(&mut self, row_type: RowType, index: usize) {
+        self.data[index].row_type = row_type;
+    }
+
+    /// Set the row type to `row_type` for all the rows.
+    pub fn set_all_rows_type(&mut self, row_type: RowType) {
+        for row in self.data.iter_mut() {
+            row.row_type = row_type;
+        }
+    }
+
+    /// Concatenate the `other` dataset inside `self`.
+    pub fn concatenate(&mut self, other: Dataset) {
+        // TODO: check that the columns are the same
+        self.data.extend(other.data);
     }
 
     /// Use one hot encoding for the column at `index`
@@ -131,21 +177,21 @@ impl Dataset {
 
         // for each row in the dataset
         for row in self.data.iter_mut() {
-            let value_to_encode = row[index];
+            let value_to_encode = row.data[index];
             let position = distinct_values.iter().position(|&x| x == value_to_encode).unwrap();
             // create the base one-hot encoding filled with zeroes
             let mut one_hot = vec![0.0f64; number_distinct_values];
             // Set the one at the correct position
             one_hot[position] = 1.0;
             // add one-hot vector inside the dataset
-            row.append(&mut one_hot);
+            row.data.append(&mut one_hot);
         }
 
         // add as columns as elements in one-hot vector
         for col in 0..number_distinct_values {
             let name = format!("Y"); // TODO: get unique col name
             let column_type = ColumnType::Target; // TODO: set from method argument
-            self.columns.push(Column {name, column_type});
+            self.columns_metadata.push(ColumnMetadata {name, column_type});
         }
 
         // remove the old column
@@ -155,11 +201,11 @@ impl Dataset {
     /// Remove column at `index`
     pub fn remove_column(&mut self, index: usize) {
         // remove column metadata
-        self.columns.remove(index);
+        self.columns_metadata.remove(index);
 
         // remove the specified column in data
         for row in self.data.iter_mut() {
-            row.remove(index);
+            row.data.remove(index);
         }
     }
 
@@ -167,7 +213,7 @@ impl Dataset {
     pub fn get_distinct_values(&self, index: usize) -> Vec<f64> {
         let mut result = Vec::new();
         for row in &self.data {
-            let value = row[index];
+            let value = row.data[index];
             if !result.contains(&value) {
                 result.push(value);
             }
@@ -177,53 +223,46 @@ impl Dataset {
         result
     }
 
-    /// Get the train features
-    pub fn get_train(&self) -> Tensor {
-        let rows = self.data.len();
-        let cols = self.count_column_type(ColumnType::Feature);
+    /// Get the tensor from the dataset with the `row_type` and 
+    /// `column_type` specified.
+    pub fn get_tensor(&self, row_type: RowType, col_type: ColumnType) -> Tensor {
+        let rows = self.count_row_type(&row_type);
+        let cols = self.count_column_type(&col_type);
         let shape = vec![rows, cols];
 
-        let mut train = Vec::new();
-        for i in 0..rows {
-            for j in 0..cols {
-                train.push(self.data[i][j]);
+        let mut result = Vec::new();
+        for row in &self.data {
+            if row.row_type == row_type {
+                result.extend(&row.data);
             }
         }
 
-        Tensor::new(train, shape)
-    }
-
-    /// Get the target features
-    pub fn get_target(&self) -> Tensor {
-        let rows = self.data.len();
-        let cols = self.count_column_type(ColumnType::Target);
-        let shape = vec![rows, cols];
-
-        let mut target = Vec::new();
-        for i in 0..rows {
-            for j in 0..cols {
-                target.push(self.data[i][j]);
-            }
-        }
-
-        Tensor::new(target, shape)
+        Tensor::new(result, shape)
     }
 
     // Count the number of columns in the dataset matching the type `col_type`
-    fn count_column_type(&self, col_type: ColumnType) -> usize {
-        self.columns.iter().filter(|&n| n.column_type == col_type).count()
+    fn count_column_type(&self, col_type: &ColumnType) -> usize {
+        self.columns_metadata.iter().filter(|&n| n.column_type == *col_type).count()
+    }
+
+    fn count_row_type(&self, row_type: &RowType) -> usize {
+        self.data.iter().filter(|&r| r.row_type == *row_type).count()
     }
 }
 
 // Implement Debug
 impl fmt::Debug for Dataset {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Dataset")
-            .field("data", &format_args!("\n{}", self))
-            .field("Observation(s)", &self.data.len())
-            .field("Feature(s)", &self.count_column_type(ColumnType::Feature))
-            .field("Target(s)", &self.count_column_type(ColumnType::Target))
-            .finish()
+        write!(f, "{}\n\
+        Observation(s): {} ({} train + {} test) \n\
+        Feature(s): {}\n\
+        Target(s): {}\n\
+        ", self, &self.data.len(),
+        &self.count_row_type(&RowType::Train),
+        &self.count_row_type(&RowType::Test),
+        &self.count_column_type(&ColumnType::Feature),
+        &self.count_column_type(&ColumnType::Target)
+    )
     }
 }
 
@@ -240,11 +279,11 @@ impl fmt::Display for Dataset {
         // 4 rows maximum
         let rows = cmp::min(self.data.len(), 4);
         // 12 cols maximum
-        let cols = cmp::min(self.data[0].len(), 12);
+        let cols = cmp::min(self.data[0].data.len(), 12);
 
         // Construct header
         let mut headers = Vec::new();
-        for c in &self.columns {
+        for c in &self.columns_metadata {
             headers.push(c.name.to_string());
         }
         let header_string = headers[0..cols].join(sep);
@@ -254,7 +293,7 @@ impl fmt::Display for Dataset {
             let mut temp_row: Vec<String> = Vec::new();
             for col in 0..cols {
                 let col_len = headers[col].len();
-                let mut value = self.data[row][col].to_string();
+                let mut value = self.data[row].data[col].to_string();
                 let value_len = value.len();
                 // if we must truncate value
                 if value_len > col_len {
