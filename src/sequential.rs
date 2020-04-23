@@ -6,6 +6,7 @@ use crate::dataset::{Dataset, RowType, ColumnType};
 pub struct Sequential {
     pub layers: Vec<Layer>,
     weights: Vec<Tensor>,
+    seed: u32,
 }
 
 impl Sequential {
@@ -14,7 +15,13 @@ impl Sequential {
         Sequential {
             layers: vec![],
             weights: vec![],
+            seed: 0,
         }
+    }
+
+    /// Seed the random number generator
+    pub fn set_seed(&mut self, s: u32) {
+        self.seed = s;
     }
 
     /// Add a layer to the model
@@ -23,25 +30,27 @@ impl Sequential {
     }
 
     // Return the list of layer outputs given an input
-    fn forward_propagation(&self, input: &Tensor, train: bool) -> Vec<Tensor> {
+    fn forward_propagation(&mut self, input: &Tensor, train: bool) -> Vec<Tensor> {
         // Forward propagation
         let mut outputs: Vec<Tensor> = Vec::new();
         // ouput of the first layer is the training sample...
         outputs.push(input.get_transpose());
+        self.seed += 1;
         for (i, w) in self.weights.iter().enumerate() {
-			
-			if train {
-				let dropout = &self.layers[i].dropout;
-				let dropout_mask = Tensor::mask(&w.shape, *dropout);
-				let output =
-                    (&((1.0 / (1.0 - dropout)) * w.mult_el(&dropout_mask)) * outputs.last().unwrap()).map(&self.layers[i].activation.activation());
+            if train {
+                let dropout = &self.layers[i].dropout;
+                let dropout_mask = Tensor::mask(&w.shape, *dropout, self.seed);
 
-				outputs.push(output);
-			} else {
-				let output =
-					(w * &outputs.last().unwrap()).map(&self.layers[i].activation.activation());
-				outputs.push(output);
-			}
+                let output = (&((1.0 / (1.0 - dropout)) * w.mult_el(&dropout_mask))
+                    * outputs.last().unwrap())
+                .map(&self.layers[i].activation.activation());
+
+                outputs.push(output);
+            } else {
+                let output =
+                    (w * &outputs.last().unwrap()).map(&self.layers[i].activation.activation());
+                outputs.push(output);
+            }
         }
 
         outputs
@@ -64,7 +73,8 @@ impl Sequential {
             } else {
                 self.layers[i - 1].unit
             };
-            self.weights.push(Tensor::random(vec![unit, input_size], 0));
+            self.weights
+                .push(Tensor::random(vec![unit, input_size], self.seed));
         }
 
         for iteration in 0..epochs {
@@ -119,12 +129,13 @@ impl Sequential {
         }
     }
 
-    pub fn predict(&self, input: &Vec<f64>) -> Tensor {
+    pub fn predict(&mut self, input: &Vec<f64>) -> Tensor {
         let tensor_input = Tensor::new(input.to_vec(), vec![1, input.to_vec().len()]);
-        // The output of the network is the last layer output
+
+      // The output of the network is the last layer output
         match self.forward_propagation(&tensor_input, false).last() {
             Some(x) => x.clone(),
-            None => panic!("No prediction.")
+            None => panic!("No prediction."),
         }
     }
 }

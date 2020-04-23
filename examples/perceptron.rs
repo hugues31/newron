@@ -15,9 +15,12 @@ fn main() {
     .unwrap();
 
     let mut model = Sequential::new();
+
     let hidden_layer_1 = Layer::new(Activation::relu(), 5, 0.0);
     let hidden_layer_2 = Layer::new(Activation::tanh(), 8, 0.2);
     let output_layer = Layer::new(Activation::relu(), 1, 0.0);
+
+    model.set_seed(777);
 
     model.add(hidden_layer_1);
     model.add(hidden_layer_2);
