@@ -129,7 +129,7 @@ impl Sequential {
         }
     }
 
-    pub fn predict(&self, input: &Vec<f64>) -> Tensor {
+    pub fn predict(&mut self, input: &Vec<f64>) -> Tensor {
         let tensor_input = Tensor::new(input.to_vec(), vec![1, input.to_vec().len()]);
 
       // The output of the network is the last layer output
