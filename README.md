@@ -8,7 +8,25 @@
 
 
 Newron is a Rust library to train deep learning models.
-Projet is currently under development. No stable API yet !
+
+*Projet is currently under heavy development. No stable API yet !*
+
+Please see the [docs](https://docs.rs/newron/) or review [examples](https://github.com/hugues31/newron/tree/master/examples) to learn more about Newron features.
+
+## Roadmap
+
+| Feature                                                                             | Progress | Comment |
+|-------------------------------------------------------------------------------------|----------|---------|
+| Be able to NOT use activation function                                              |⬤⬤◯◯◯|         |
+| Softmax for classification task                                                     |⬤◯◯◯◯|         |
+| SGD with batch gradient descent                                                     |◯◯◯◯◯|         |
+| Dataset structure to load CSV,...                                                   |◯◯◯◯◯|         |
+| Improve metrics (loss, precision for train&test)                                    |◯◯◯◯◯|         |
+| Load [MNIST fashion dataset](https://github.com/zalandoresearch/fashion-mnist)      |◯◯◯◯◯|         |
+| Implement Convolutional Layer                                                       |◯◯◯◯◯|         |
+| Implement RNN Layer                                                                 |◯◯◯◯◯|         |
+| Webapp to monitor training phase                                                    |◯◯◯◯◯|         |
+| Save and load trained models/weights                                                |◯◯◯◯◯|         |
 
 
 ## Contribution
