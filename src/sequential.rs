@@ -1,6 +1,7 @@
 /// The Sequential model is a linear stack of layers.
 use crate::layer::Layer;
 use crate::tensor::Tensor;
+use crate::dataset::{Dataset, RowType, ColumnType};
 
 pub struct Sequential {
     pub layers: Vec<Layer>,
@@ -48,7 +49,10 @@ impl Sequential {
 
     /// Use this function to train the model on x_train with target y_train.
     /// Set `verbose` to true to see debugging and training information.
-    pub fn fit(&mut self, x_train: &Tensor, y_train: &Tensor, epochs: u32, verbose: bool) {
+    pub fn fit(&mut self, dataset: &Dataset, epochs: u32, verbose: bool) {
+        let x_train = dataset.get_tensor(RowType::Train, ColumnType::Feature); 
+        let y_train = dataset.get_tensor(RowType::Train, ColumnType::Target);
+
         let alpha = 0.02;
 
         // Initialize weights with random values
@@ -115,9 +119,10 @@ impl Sequential {
         }
     }
 
-    pub fn predict(&self, input: &Tensor) -> Tensor {
+    pub fn predict(&self, input: &Vec<f64>) -> Tensor {
+        let tensor_input = Tensor::new(input.to_vec(), vec![1, input.to_vec().len()]);
         // The output of the network is the last layer output
-        match self.forward_propagation(input, false).last() {
+        match self.forward_propagation(&tensor_input, false).last() {
             Some(x) => x.clone(),
             None => panic!("No prediction.")
         }
