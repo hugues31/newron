@@ -18,17 +18,12 @@ impl Sequential {
         }
     }
 
-    // Immutable access.
-    fn get_seed(&self) -> &u32 {
-        &self.seed
-    }
-
-    // Mutable access.
+    /// Seed the random number generator
     pub fn set_seed(&mut self, s: u32) {
         self.seed = s;
     }
 
-    // Add a layer to the model
+    /// Add a layer to the model
     pub fn add(&mut self, layer: Layer) {
         self.layers.push(layer);
     }
@@ -39,7 +34,7 @@ impl Sequential {
         let mut outputs: Vec<Tensor> = Vec::new();
         // ouput of the first layer is the training sample...
         outputs.push(input.get_transpose());
-        self.seed = &self.seed + 1;
+        self.seed += 1;
         for (i, w) in self.weights.iter().enumerate() {
             if train {
                 let dropout = &self.layers[i].dropout;
