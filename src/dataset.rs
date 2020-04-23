@@ -5,6 +5,19 @@ use std::fs::File;
 use std::io::Read;
 
 use crate::tensor::Tensor;
+use crate::utils;
+
+#[derive(PartialEq)]
+pub enum ColumnType {
+    Feature, // column is a feature used to train models
+    Target,  // column is a target to predict
+    Skip     // column not used by the model
+}
+
+pub struct Column {
+    name: String,
+    column_type: ColumnType
+}
 
 #[derive(Debug)]
 pub enum DatasetError {
@@ -16,13 +29,8 @@ pub enum DatasetError {
 /// a model on it.
 pub struct Dataset {
     // Contains all data for dataset
-    data: Vec<Vec<f64>>,
-    // Contains name of the columns
-    header: Vec<String>,
-    // Indice of features (cols) to use for training
-    feature_cols: Vec<usize>,
-    // Indice of target(s) colunm(s) to use
-    target_cols: Vec<usize>,
+    data: Vec<Vec<f64>>, //TODO: refactor into Vec<Row>
+    columns: Vec<Column>
 }
 
 impl Dataset {
@@ -35,9 +43,7 @@ impl Dataset {
     pub fn from_raw_data(data: Vec<Vec<f64>>) -> Result<Dataset, DatasetError> {
         let cols = data[0].len();
 
-        let mut header = Vec::new();
-        let mut feature_cols = Vec::new();
-        let mut target_cols = Vec::new();
+        let mut columns = Vec::new();
 
         // test that all rows in 'data' have equal lengths
         if data.iter().any(|ref v| v.len() != data[0].len()) {
@@ -46,18 +52,14 @@ impl Dataset {
 
         // iterate through training features
         for i in 0..cols - 1 {
-            header.push(format!("X_{}", i));
-            feature_cols.push(i);
+            columns.push(Column {name: format!("X_{}", i), column_type: ColumnType::Feature})
         }
 
-        header.push(format!("Y"));
-        target_cols.push(cols - 1);
+        columns.push(Column {name: format!("Y"), column_type: ColumnType::Target});
 
         Ok(Dataset {
             data,
-            header,
-            feature_cols,
-            target_cols,
+            columns,
         })
     }
 
@@ -71,52 +73,114 @@ impl Dataset {
 
         let mut buf = [0u8;4];
         images_file.read(&mut buf).unwrap();
-        let magic_number = swap_endian(as_u32_le(&buf));
+        let magic_number = utils::swap_endian(utils::as_u32_le(&buf));
         assert_eq!(magic_number, 2051, "Incorrect magic number for a image file.");
 
         let mut buf = [0u8;4];
         labels_file.read(&mut buf).unwrap();
-        let magic_number = swap_endian(as_u32_le(&buf));
+        let magic_number = utils::swap_endian(utils::as_u32_le(&buf));
         assert_eq!(magic_number, 2049, "Incorrect magic number for a label file.");
         
         images_file.read(&mut buf).unwrap();
-        let number_images = swap_endian(as_u32_le(&buf));
+        let number_images = utils::swap_endian(utils::as_u32_le(&buf));
         
         labels_file.read(&mut buf).unwrap();
-        let number_labels = swap_endian(as_u32_le(&buf));
+        let number_labels = utils::swap_endian(utils::as_u32_le(&buf));
 
         assert_eq!(number_images, number_labels, "Number of images and label must be identical.");
 
         images_file.read(&mut buf).unwrap();
-        let rows = swap_endian(as_u32_le(&buf)); // =28
+        let rows = utils::swap_endian(utils::as_u32_le(&buf)); // =28
 
         images_file.read(&mut buf).unwrap();
-        let cols = swap_endian(as_u32_le(&buf)); // =28
+        let cols = utils::swap_endian(utils::as_u32_le(&buf)); // =28
     
-        let mut label: u32 = 0;
         let vector_size = (rows * cols) as usize;
 
-        for i in 0..number_images {
+        let mut data: Vec<Vec<f64>> = Vec::new();
+
+        for _ in 0..number_images {
             // read image pixel
             let mut buf = vec![0u8;vector_size];
             images_file.read(&mut buf).unwrap();
-            println!("Pixel : {:?}", buf);
+            let mut pixels = utils::to_vec_f64(&buf);
 
             // read label
-            let mut buf = [0u8;1];
-            labels_file.read(&mut buf).unwrap();
-            let label = buf[0];
-            println!("Cat : {}", label);
+            let mut label = vec![0u8;1];
+            labels_file.read(&mut label).unwrap();
+            
+            // add row to dataset (pixels + label)
+            pixels.append(&mut utils::to_vec_f64(&label));
+            data.push(pixels);
         }
 
+        // At this point, the last col is the label
+        // We must one-hot-encode it
+        let mut dataset = Dataset::from_raw_data(data).unwrap();
+        dataset.one_hot_encode(vector_size);
 
-        unimplemented!();
+        Ok(dataset)
+    }
+
+    /// Use one hot encoding for the column at `index`
+    /// Note : the column at `index` is removed and 
+    /// replaced with columns containing the one-hot-encoding
+    pub fn one_hot_encode(&mut self, index: usize) {
+        let distinct_values = self.get_distinct_values(index);
+        let number_distinct_values = distinct_values.len();
+
+        // for each row in the dataset
+        for row in self.data.iter_mut() {
+            let value_to_encode = row[index];
+            let position = distinct_values.iter().position(|&x| x == value_to_encode).unwrap();
+            // create the base one-hot encoding filled with zeroes
+            let mut one_hot = vec![0.0f64; number_distinct_values];
+            // Set the one at the correct position
+            one_hot[position] = 1.0;
+            // add one-hot vector inside the dataset
+            row.append(&mut one_hot);
+        }
+
+        // add as columns as elements in one-hot vector
+        for col in 0..number_distinct_values {
+            let name = format!("Y"); // TODO: get unique col name
+            let column_type = ColumnType::Target; // TODO: set from method argument
+            self.columns.push(Column {name, column_type});
+        }
+
+        // remove the old column
+        self.remove_column(index)
+    }
+
+    /// Remove column at `index`
+    pub fn remove_column(&mut self, index: usize) {
+        // remove column metadata
+        self.columns.remove(index);
+
+        // remove the specified column in data
+        for row in self.data.iter_mut() {
+            row.remove(index);
+        }
+    }
+
+    /// Get all distinct values for column at `index` (sorted)
+    pub fn get_distinct_values(&self, index: usize) -> Vec<f64> {
+        let mut result = Vec::new();
+        for row in &self.data {
+            let value = row[index];
+            if !result.contains(&value) {
+                result.push(value);
+            }
+        }
+        // sort values (float cannot be perfectly compared so we use partial_cmp)
+        result.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        result
     }
 
     /// Get the train features
     pub fn get_train(&self) -> Tensor {
         let rows = self.data.len();
-        let cols = self.feature_cols.len();
+        let cols = self.count_column_type(ColumnType::Feature);
         let shape = vec![rows, cols];
 
         let mut train = Vec::new();
@@ -132,7 +196,7 @@ impl Dataset {
     /// Get the target features
     pub fn get_target(&self) -> Tensor {
         let rows = self.data.len();
-        let cols = self.target_cols.len();
+        let cols = self.count_column_type(ColumnType::Target);
         let shape = vec![rows, cols];
 
         let mut target = Vec::new();
@@ -144,16 +208,21 @@ impl Dataset {
 
         Tensor::new(target, shape)
     }
+
+    // Count the number of columns in the dataset matching the type `col_type`
+    fn count_column_type(&self, col_type: ColumnType) -> usize {
+        self.columns.iter().filter(|&n| n.column_type == col_type).count()
+    }
 }
 
 // Implement Debug
 impl fmt::Debug for Dataset {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Dataset")
-            .field("data", &format_args!("{}", self))
+            .field("data", &format_args!("\n{}", self))
             .field("Observation(s)", &self.data.len())
-            .field("Feature(s)", &self.feature_cols.len())
-            .field("Target(s)", &self.target_cols.len())
+            .field("Feature(s)", &self.count_column_type(ColumnType::Feature))
+            .field("Target(s)", &self.count_column_type(ColumnType::Target))
             .finish()
     }
 }
@@ -167,19 +236,24 @@ impl fmt::Display for Dataset {
         let sep = " | "; // separator
         let mut result = String::new();
 
+        // Construct table
+        // 4 rows maximum
+        let rows = cmp::min(self.data.len(), 4);
+        // 12 cols maximum
+        let cols = cmp::min(self.data[0].len(), 12);
+
         // Construct header
-        let header_string = self.header.join(sep);
+        let mut headers = Vec::new();
+        for c in &self.columns {
+            headers.push(c.name.to_string());
+        }
+        let header_string = headers[0..cols].join(sep);
         result.push_str(&header_string);
 
-        // Construct table
-        let rows = self.data.len();
-        let cols = self.data[0].len();
-
-        // 3 rows maximum to be displayed
-        for row in 0..cmp::min(rows,3) {
+        for row in 0..rows {
             let mut temp_row: Vec<String> = Vec::new();
             for col in 0..cols {
-                let col_len = self.header[col].len();
+                let col_len = headers[col].len();
                 let mut value = self.data[row][col].to_string();
                 let value_len = value.len();
                 // if we must truncate value
@@ -201,21 +275,3 @@ impl fmt::Display for Dataset {
     }
 }
 
-fn swap_endian(val: u32) -> u32 {
-    let result = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);
-    return (result << 16) | (result >> 16);
-}
-
-fn as_u32_be(array: &[u8; 4]) -> u32 {
-    ((array[0] as u32) << 24) +
-    ((array[1] as u32) << 16) +
-    ((array[2] as u32) <<  8) +
-    ((array[3] as u32) <<  0)
-}
-
-fn as_u32_le(array: &[u8; 4]) -> u32 {
-    ((array[0] as u32) <<  0) +
-    ((array[1] as u32) <<  8) +
-    ((array[2] as u32) << 16) +
-    ((array[3] as u32) << 24)
-}

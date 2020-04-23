@@ -11,4 +11,6 @@ fn main() {
     let path = Path::new("/fashion_mnist");
 
     let dataset = Dataset::from_ubyte(path).unwrap();
+
+    println!("{:?}", dataset);
 }
