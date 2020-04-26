@@ -22,5 +22,5 @@ name = "mnist"
 path = "examples/mnist.rs"
 
 [[example]]
-name = "titanic"
-path = "examples/titanic.rs"
+name = "wine_quality"
+path = "examples/wine_quality.rs"
