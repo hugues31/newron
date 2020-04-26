@@ -2,7 +2,7 @@ use std::fmt;
 use std::path::Path;
 use std::cmp;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Write, BufReader, BufRead, Error};
 
 use crate::tensor::Tensor;
 use crate::utils;
@@ -80,9 +80,44 @@ impl Dataset {
         })
     }
 
-    pub fn from_csv() -> Result<Dataset, DatasetError> {
-        unimplemented!();
+    pub fn from_csv(path: &Path, dataset_type: String) -> Result<Dataset, DatasetError> {
+        let dataset = Dataset::load_csv(path).unwrap();
+        // set all rows to "test" type for the test_dataset
+        match dataset_type.as_str() {
+            "train" => dataset.set_all_rows_type(RowType::Train),
+            "test" => dataset.set_all_rows_type(RowType::Test),
+            "skip" =>  dataset.set_all_rows_type(RowType::Test),
+            _ => println!("raise error"),
+        }
+
+        dataset.set_all_rows_type(RowType::Train);
+        // Add train dataset inside test dataset
+        Ok(dataset)
     }
+
+
+    fn load_csv(path: &Path) -> Result<Dataset, DatasetError> {
+        let delimiter = ",";
+
+        let input_file = File::open(path)?;
+        let buffered = BufReader::new(input_file);
+
+        let mut data: Vec<Vec<&str>> = Vec::new();
+
+        for line in buffered.lines() {
+
+            let l = line?;
+            let l = l.split(&delimiter);
+            let row_vec: Vec<&str> = l.collect();
+            println!("{:?}", row_vec);
+            // data.push(row_vec);
+        }
+
+        let mut dataset = Dataset::from_raw_data(data).unwrap();
+        Ok(dataset)
+    }
+
+    
 
     fn load_ubyte(path: &Path, dataset: String) -> Result<Dataset, DatasetError> {
         let mut labels_file = File::open(path.join(format!("{}-labels-idx1-ubyte", dataset))).unwrap();

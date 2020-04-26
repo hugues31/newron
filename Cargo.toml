@@ -20,3 +20,7 @@ path = "examples/perceptron.rs"
 [[example]]
 name = "mnist"
 path = "examples/mnist.rs"
+
+[[example]]
+name = "titanic"
+path = "examples/titanic.rs"
