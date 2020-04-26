@@ -8,25 +8,27 @@ use std::str::FromStr;
 use crate::tensor::Tensor;
 use crate::utils;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum ColumnType {
     Feature, // column is a feature used to train models
     Target,  // column is a target to predict
     Skip     // column not used by the model
 }
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 pub enum RowType {
     Train,  // row is used for training
     Test,   // row is preserved for test
     Skip    // row is ignored
 }
 
+#[derive(Debug)]
 pub struct ColumnMetadata {
     name: String,
     column_type: ColumnType
 }
 
+#[derive(Debug)]
 pub struct Row {
     data: Vec<f64>,
     row_type: RowType
@@ -99,7 +101,7 @@ impl Dataset {
             if i == 0 {
                 continue; // TODO: implement header
             }
-            
+
             let row_vec_f64: Vec<f64> = row_vec_str.iter().map(|x| f64::from_str(x).unwrap()).collect();
             data.push(row_vec_f64);
         }
@@ -254,10 +256,19 @@ impl Dataset {
         let cols = self.count_column_type(&col_type);
         let shape = vec![rows, cols];
 
+        let mut col_indexes = Vec::new();
+        for (i, col) in self.columns_metadata.iter().enumerate() {
+            if col.column_type == col_type {
+                col_indexes.push(i);
+            }
+        }
+
         let mut result = Vec::new();
         for row in &self.data {
             if row.row_type == row_type {
-                result.extend(&row.data);
+                for col in &col_indexes {
+                    result.push(row.data[*col]);
+                }
             }
         }
 

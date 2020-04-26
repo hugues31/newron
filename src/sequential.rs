@@ -62,7 +62,7 @@ impl Sequential {
         let x_train = dataset.get_tensor(RowType::Train, ColumnType::Feature); 
         let y_train = dataset.get_tensor(RowType::Train, ColumnType::Target);
 
-        let alpha = 0.02;
+        let alpha = 0.002;
 
         // Initialize weights with random values
         self.weights.clear();
