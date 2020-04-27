@@ -74,6 +74,28 @@ impl Tensor {
         }
     }
 
+    /// Compute the mean of the matrix along the `axis` specified.
+    /// 0 = along the column, 1 = along the row
+    pub fn get_mean(&self, axis: usize) -> Tensor {
+        let mut data = Vec::new();
+
+        let other_axis = if axis == 1 { 0 } else { 1 };
+
+        // the wording is not quite exact here
+        // row and col is indeed the row and col for axis == 0
+        // but row become col and col become when axis == 1
+        for row in 0..self.shape[other_axis] {
+            let mut acc = 0.0;
+            for col in 0..self.shape[axis] {
+                acc += self.get_value(row, col);
+            }
+            data.push(acc / self.shape[axis] as f64);
+        }
+
+        let shape = vec![1, data.len()];
+        Tensor::new(data, shape)
+    }
+
     /// Get 2d positioned value
     // 'data' is a flat array of f64
     fn get_value(&self, x: usize, y: usize) -> f64 {

@@ -18,8 +18,8 @@ fn main() {
 
     model.set_seed(777);
 
-    model.add(&Dense::new(3, 8));
-    model.add(&ReLU);
+    model.add(Dense::new(3, 8));
+    model.add(ReLU);
 
     model.fit(&dataset, 2_000, true);
 

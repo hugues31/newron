@@ -8,7 +8,8 @@ impl Layer for ReLU {
         input.map(|x| x.max(0.0))
     }
 
-    fn backward(self, input: Tensor, grad_output: Tensor) -> Tensor {
-        input.map(|x| if x < 0.0 { 0.0 } else { x })
+    fn backward(&mut self, input: Tensor, grad_output: Tensor) -> Tensor {
+        let relu_grad = input.map(|x| if x < 0.0 { 0.0 } else { x });
+        grad_output * relu_grad
     }
 }

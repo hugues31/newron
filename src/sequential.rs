@@ -23,13 +23,19 @@ impl Sequential {
     }
 
     /// Add a layer to the model
-    pub fn add(&mut self, layer: &dyn Layer) {
-        unimplemented!();
+    pub fn add<T: 'static +  Layer>(&mut self, layer: T) {
+        self.layers.push(Box::new(layer));
     }
 
     // Return the list of layer outputs given an input
     fn forward_propagation(&mut self, input: &Tensor, train: bool) -> Vec<Tensor> {
-        unimplemented!();
+        let mut activations = Vec::new();
+
+        for layer in &self.layers {
+
+        }
+
+        activations
     }
 
     /// Use this function to train the model on x_train with target y_train.
