@@ -10,6 +10,6 @@ impl Layer for ReLU {
 
     fn backward(&mut self, input: &Tensor, grad_output: Tensor) -> Tensor {
         let relu_grad = input.map(|x| if x < 0.0 { 0.0 } else { x });
-        grad_output * relu_grad
+        grad_output * relu_grad.get_transpose()
     }
 }

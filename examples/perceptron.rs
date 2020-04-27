@@ -21,7 +21,10 @@ fn main() {
     model.add(Dense::new(3, 8));
     model.add(ReLU);
 
-    model.fit(&dataset, 2_000, true);
+    model.add(Dense::new(8, 1));
+    model.add(ReLU);
+
+    model.fit(&dataset, 20, true);
 
     let features_to_predict = vec![0.0, 0.0, 1.0];
     let prediction = model.predict(&features_to_predict);

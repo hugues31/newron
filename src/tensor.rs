@@ -30,15 +30,8 @@ impl Tensor {
     pub fn random(shape: Vec<usize>, seed: u32) -> Tensor {
         let mut rng = Rand::new(seed);
 
-        // Throw a dice 100 times
         let number_values = shape.iter().product();
-        let data: Vec<f64> = (0..number_values).map(|_| rng.rand_float()).collect();
-        // println!("{:?}",data);
-
-        // Shuffle an array
-        // let mut v: Vec<u32> = (1..101).collect();
-        // rng.shuffle(&mut v);
-
+        let data: Vec<f64> = (0..number_values).map(|_| (rng.rand_float() - 0.5) * 2.0).collect();
         Tensor { data, shape }
     }
 
@@ -139,7 +132,6 @@ impl Tensor {
                 for j in 0..other.shape[1] {
                     t += other.data[j] * self.get_value(j, i);
                 }
-
                 sum_product.push(t);
             }
 
@@ -170,7 +162,7 @@ impl<'a, 'b> Add<&'b Tensor> for &'b Tensor {
 
     fn add(self, other: &'b Tensor) -> Tensor {
         if self.shape != other.shape {
-            panic!("Could not add 2 tensors of different");
+            panic!("Could not add 2 tensors of different. {} + {}", self, other);
         }
 
         Tensor {

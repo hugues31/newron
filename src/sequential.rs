@@ -41,9 +41,8 @@ impl Sequential {
         activations.push(self.layers.first().unwrap().forward(&input));
 
         // Next propagations with the last propagated values
-        for layer in &self.layers {
+        for layer in self.layers.iter().skip(1) {
             activations.push(layer.forward(activations.last().unwrap()));
-            println!("ok");
         }
 
         assert_eq!(activations.len(), self.layers.len());
@@ -67,7 +66,8 @@ impl Sequential {
             for training_indices in &indices[0..batch_size] {
                 let x_batch = x_train.get_row(*training_indices);
                 let y_batch = y_train.get_row(*training_indices);
-                self.step(&x_batch, y_batch);
+                let loss = self.step(&x_batch, &y_batch);
+                if verbose { println!("Loss: {}", loss) };
             }
             
         }
@@ -75,24 +75,29 @@ impl Sequential {
 
 
     /// Train the network and return the loss
-    pub fn step(&mut self, x_batch: &Tensor, y_batch: Tensor) -> f64 {
+    pub fn step(&mut self, x_batch: &Tensor, y_batch: &Tensor) -> f64 {
         let mut layer_activations = self.forward_propagation(x_batch, true);
         layer_activations.insert(0, x_batch.clone());
-        
         let loss = (&layer_activations.last().unwrap().get_transpose() - &y_batch).map(|x| x*x).data.iter().sum::<f64>();
-
         let mut loss_grad = &layer_activations.last().unwrap().get_transpose() - &y_batch;
 
         // Propagate gradients through the network
         // Reverse propogation as this is backprop
-        for (i, layer) in self.layers.iter_mut().enumerate() {
+        for (i, layer) in self.layers.iter_mut().skip(1).rev().enumerate() {
+            let i = layer_activations.len() - 2 - i;
             loss_grad = layer.backward(&layer_activations[i], loss_grad);
         }
-
+        
         loss
     }
 
     pub fn predict(&mut self, input: &Vec<f64>) -> Tensor {
-        unimplemented!();
+        let tensor_input = Tensor::new(input.to_vec(), vec![1, input.to_vec().len()]);
+
+        // The output of the network is the last layer output
+        match self.forward_propagation(&tensor_input, false).last() {
+            Some(x) => x.clone(),
+            None => panic!("No prediction."),
+        }
     }
 }
