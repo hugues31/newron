@@ -82,7 +82,7 @@ mod tensor_tests {
                                       0.0, 4.0],
                                       vec![2, 2]);
         
-        assert_eq!(a.map(&relu()), result);
+        assert_eq!(a.map(relu()), result);
     }
 
     #[test]
