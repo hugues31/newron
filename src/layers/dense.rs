@@ -16,17 +16,17 @@ impl Dense {
 }
 
 impl Layer for Dense {
-    fn forward(self, input: Tensor) -> Tensor {
+    fn forward(&self, input: &Tensor) -> Tensor {
         // Perform an affine transformation:
         // f(x) = <W*x> + b
         
         // input shape: [batch, input_units]
         // output shape: [batch, output units]
 
-        input.dot(&self.weights) + self.biases
+        &input.dot(&self.weights) + &self.biases
     }
 
-    fn backward(&mut self, input: Tensor, grad_output: Tensor) -> Tensor {
+    fn backward(&mut self, input: &Tensor, grad_output: Tensor) -> Tensor {
         // compute d f / d x = d f / d dense * d dense / d x
         // where d dense/ d x = weights transposed
         let grad_input = grad_output.dot(&self.weights.get_transpose());

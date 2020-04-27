@@ -145,7 +145,7 @@ impl Tensor {
 
             return Tensor::new(sum_product, vec![1, self.shape[1]]);
         } else {
-            unimplemented!("Dot function not complete yet.")
+            unimplemented!("Dot function not complete yet dot({},{}).", self, other)
         }
     }
 
