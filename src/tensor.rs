@@ -385,16 +385,19 @@ impl fmt::Display for Tensor {
                 write!(f, "[{}]", result)
             }
             2 => {
+                // maximum of 4 decimals are shown
+                let decimals = 4;
                 let mut result = String::from("\n");
                 for row in 0..self.shape[0] {
                     result += "|";
                     for col in 0..self.shape[1] {
                         let mut value = self.get_value(row, col).to_string();
-                        if value.len() > 4 {
-                            value = value[0..4].to_string();
+                        
+                        if value.len() > decimals {
+                            value = value[0..decimals].to_string();
                         }
                         else {
-                            value = value.to_string() + &" ".repeat(4 - &value.len());
+                            value = value.to_string() + &" ".repeat(decimals - &value.len());
                         }
                         result += &(value + "  ")
                     }
