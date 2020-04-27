@@ -389,7 +389,14 @@ impl fmt::Display for Tensor {
                 for row in 0..self.shape[0] {
                     result += "|";
                     for col in 0..self.shape[1] {
-                        result += &(self.get_value(row, col).to_string() + "  ")
+                        let mut value = self.get_value(row, col).to_string();
+                        if value.len() > 4 {
+                            value = value[0..4].to_string();
+                        }
+                        else {
+                            value = value.to_string() + &" ".repeat(4 - &value.len());
+                        }
+                        result += &(value + "  ")
                     }
                     result += "|\n";
                 }

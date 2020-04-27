@@ -43,6 +43,7 @@ impl Sequential {
         // Next propagations with the last propagated values
         for layer in &self.layers {
             activations.push(layer.forward(activations.last().unwrap()));
+            println!("ok");
         }
 
         assert_eq!(activations.len(), self.layers.len());
@@ -77,7 +78,7 @@ impl Sequential {
     pub fn step(&mut self, x_batch: &Tensor, y_batch: Tensor) -> f64 {
         let mut layer_activations = self.forward_propagation(x_batch, true);
         layer_activations.insert(0, x_batch.clone());
-
+        
         let loss = (&layer_activations.last().unwrap().get_transpose() - &y_batch).map(|x| x*x).data.iter().sum::<f64>();
 
         let mut loss_grad = &layer_activations.last().unwrap().get_transpose() - &y_batch;
