@@ -1,10 +1,10 @@
 /// The Sequential model is a linear stack of layers.
-use crate::layers;
+use crate::layers::layer::Layer;
 use crate::tensor::Tensor;
 use crate::dataset::{Dataset, RowType, ColumnType};
 
 pub struct Sequential {
-    pub layers: Vec<Layer>,
+    pub layers: Vec<Box<dyn Layer>>,
     seed: u32,
 }
 
@@ -23,7 +23,7 @@ impl Sequential {
     }
 
     /// Add a layer to the model
-    pub fn add(&mut self, layer: Layer) {
+    pub fn add(&mut self, layer: &dyn Layer) {
         unimplemented!();
     }
 

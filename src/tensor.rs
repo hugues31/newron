@@ -92,7 +92,7 @@ impl Tensor {
 
     /// Creates a new Tensor where the function `f` is applied
     /// element-wise. Does not change the shape of tensor.
-    pub fn map(&self, f: &fn(f64) -> f64) -> Tensor {
+    pub fn map(&self, f: fn(f64) -> f64) -> Tensor {
         Tensor {
             data: self.data.to_vec().into_iter().map(f).collect(),
             shape: self.shape.to_vec(),
