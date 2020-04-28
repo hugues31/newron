@@ -105,6 +105,18 @@ impl Tensor {
         }
     }
 
+    /// Get all rows from a vector containing indices
+    pub fn get_rows(&self, indices: Vec<usize>) -> Tensor {
+        let mut data = Vec::new();
+        for i in &indices {
+            data.extend(self.get_row(*i).data.iter());
+        }
+        Tensor {
+            data,
+            shape: vec![indices.len(), self.shape[1]],
+        }
+    }
+
     /// Creates a new Tensor where the function `f` is applied
     /// element-wise. Does not change the shape of tensor.
     pub fn map(&self, f: fn(f64) -> f64) -> Tensor {

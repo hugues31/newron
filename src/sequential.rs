@@ -54,6 +54,9 @@ impl Sequential {
     pub fn fit(&mut self, dataset: &Dataset, epochs: u32, verbose: bool) {
         let x_train = dataset.get_tensor(RowType::Train, ColumnType::Feature); 
         let y_train = dataset.get_tensor(RowType::Train, ColumnType::Target);
+
+        // TODO: Check model architecture (input_unit == x_train.len(),
+        // output_unit_l == input_unit_l+1, output_unit_l_n = y_train.len()) and display message here
         
         // auto batch size : TODO improve it
         let batch_size = cmp::min(x_train.shape[0], 32);
@@ -76,9 +79,20 @@ impl Sequential {
 
     /// Train the network and return the loss
     pub fn step(&mut self, x_batch: &Tensor, y_batch: &Tensor) -> f64 {
+        // Train our network on a given batch of x_batch and y_batch.
+        // Size of the batch = # rows of x_batch = # rows of y_batch
+        // We first need to run forward to get all layer activations.
+        // Then we can run layer.backward going from last to first layer.
+        // After we have called backward for all layers, all Dense layers have already made one gradient step.
+
+        // Get the layer activations
+        
         let mut layer_activations = self.forward_propagation(x_batch, true);
         layer_activations.insert(0, x_batch.clone());
+
+        // Compute the loss and the initial gradient
         let loss = (&layer_activations.last().unwrap().get_transpose() - &y_batch).map(|x| x*x).data.iter().sum::<f64>();
+        
         let mut loss_grad = &layer_activations.last().unwrap().get_transpose() - &y_batch;
 
         // Propagate gradients through the network

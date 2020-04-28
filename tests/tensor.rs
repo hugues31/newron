@@ -55,6 +55,20 @@ mod tensor_tests {
     }
 
     #[test]
+    fn test_get_rows() {
+        // 4x2 matrix
+        let a = Tensor::new(vec![1.0, 2.0,
+                                 3.0, 4.0,
+                                 5.0, 6.0,
+                                 7.0, 8.0],
+                                 vec![4, 2]);
+        
+        let test_row = Tensor::new(vec![3.0, 4.0, 7.0, 8.0], vec![2, 2]);
+
+        assert_eq!(a.get_rows(vec![1, 3]), test_row);
+    }
+
+    #[test]
     fn test_dot_sum_product() {
         // test if dot() acts as the dot() function in Numpy
         let a = Tensor::new(vec![1.0, 2.0, 3.0,

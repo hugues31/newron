@@ -16,5 +16,8 @@ fn main() {
     model.add(Dense::new(11, 40));
     model.add(ReLU);
 
+    model.add(Dense::new(40, 1));
+    model.add(ReLU);
+
     model.fit(&dataset, 2_000, true);
 }
