@@ -22,7 +22,7 @@ impl Layer for Dense {
         
         // input shape: [batch, input_units]
         // output shape: [batch, output units]
-        
+        panic!("{:?} dot {:?}", self.weights, input);
         &self.weights.dot(&input) + &self.biases
     }
 

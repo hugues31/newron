@@ -65,7 +65,7 @@ mod tensor_tests {
         
         let test_row = Tensor::new(vec![3.0, 4.0, 7.0, 8.0], vec![2, 2]);
 
-        assert_eq!(a.get_rows(vec![1, 3]), test_row);
+        assert_eq!(a.get_rows(&[1, 3]), test_row);
     }
 
     #[test]
@@ -77,7 +77,17 @@ mod tensor_tests {
 
         let b = Tensor::new(vec![1.0, 0.5], vec![1, 2]);
 
-        let result = Tensor::new(vec![3.0, 4.5, 6.0], vec![1,3]);
+        let result = Tensor::new(vec![3.0, 4.5, 6.0], vec![1, 3]);
+
+        assert_eq!(a.dot(&b), result);
+    }
+
+    #[test]
+    fn test_dot_2d_tensor() {
+        let a = Tensor::new(vec![1.0,2.0,3.0,4.0,5.0,6.0], vec![2, 3]);
+        let b = Tensor::new(vec![1.0,2.0,3.0,4.0,1.0,2.0,3.0,4.0,1.0,2.0,3.0,4.0], vec![3, 4]);
+
+        let result = Tensor::new(vec![6.0, 12.0, 18.0, 24.0, 15.0, 30.0, 45.0, 60.0], vec![2, 4]);
 
         assert_eq!(a.dot(&b), result);
     }

@@ -106,9 +106,9 @@ impl Tensor {
     }
 
     /// Get all rows from a vector containing indices
-    pub fn get_rows(&self, indices: Vec<usize>) -> Tensor {
+    pub fn get_rows(&self, indices: &[usize]) -> Tensor {
         let mut data = Vec::new();
-        for i in &indices {
+        for i in indices {
             data.extend(self.get_row(*i).data.iter());
         }
         Tensor {
@@ -148,6 +148,12 @@ impl Tensor {
             }
 
             return Tensor::new(sum_product, vec![1, self.shape[1]]);
+        } else if self.shape[1] == other.shape[0] {
+            let mut data = Vec::new();
+            return  Tensor {
+                shape: vec![self.shape[0], other.shape[1]],
+                data
+            };
         } else {
             unimplemented!("Dot function not complete yet dot({},{}).", self, other)
         }

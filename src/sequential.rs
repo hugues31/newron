@@ -34,6 +34,7 @@ impl Sequential {
     fn forward_propagation(&mut self, input: &Tensor, train: bool) -> Vec<Tensor> {
         // Compute activations of all network layers by applying them sequentially.
         // Return a list of activations for each layer.
+        // Note : Tensor may include one or several rows
 
         let mut activations: Vec<Tensor> = Vec::new();
         
@@ -59,16 +60,22 @@ impl Sequential {
         // output_unit_l == input_unit_l+1, output_unit_l_n = y_train.len()) and display message here
         
         // auto batch size : TODO improve it
-        let batch_size = cmp::min(x_train.shape[0], 32);
+        let batch_size = cmp::min(x_train.shape[0], 5);
 
         for _ in 0..epochs {
             let mut indices = (0..x_train.shape[0]).collect::<Vec<usize>>();
-            let mut rand = Rand::new(self.seed);
-            rand.shuffle(&mut indices[..]);
+            let shuffle = true; // TODO: make shuffle a parameter
+            if shuffle {
+                let mut rand = Rand::new(self.seed);
+                rand.shuffle(&mut indices[..]);
+                self.seed += 1;
+            }
 
-            for training_indices in &indices[0..batch_size] {
-                let x_batch = x_train.get_row(*training_indices);
-                let y_batch = y_train.get_row(*training_indices);
+            for batch_start_indice in indices.iter().step_by(batch_size) {
+                let batch_indices: &[usize] = &indices[*batch_start_indice..*batch_start_indice+batch_size];
+                let x_batch = x_train.get_rows(batch_indices);
+                let y_batch = y_train.get_rows(batch_indices);
+
                 let loss = self.step(&x_batch, &y_batch);
                 if verbose { println!("Loss: {}", loss) };
             }
