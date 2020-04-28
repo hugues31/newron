@@ -2,7 +2,7 @@ use std::fmt;
 use std::path::Path;
 use std::cmp;
 use std::fs::File;
-use std::io::{Read, Write, BufReader, BufRead, Error};
+use std::io::{Read, BufReader, BufRead};
 use std::str::FromStr;
 
 use crate::tensor::Tensor;
@@ -214,7 +214,7 @@ impl Dataset {
         }
 
         // add as columns as elements in one-hot vector
-        for col in 0..number_distinct_values {
+        for _col in 0..number_distinct_values {
             let name = format!("Y"); // TODO: get unique col name
             let column_type = ColumnType::Target; // TODO: set from method argument
             self.columns_metadata.push(ColumnMetadata {name, column_type});
@@ -283,6 +283,18 @@ impl Dataset {
     fn count_row_type(&self, row_type: &RowType) -> usize {
         self.data.iter().filter(|&r| r.row_type == *row_type).count()
     }
+
+    pub fn get_number_features(&self) -> usize {
+        self.count_column_type(&ColumnType::Feature)
+    }
+
+    pub fn get_number_targets(&self) -> usize {
+        self.count_column_type(&ColumnType::Target)
+    }
+
+    pub fn get_row_count(&self) -> usize {
+        self.data.len()
+    }
 }
 
 // Implement Debug
@@ -292,11 +304,11 @@ impl fmt::Debug for Dataset {
         Observation(s): {} ({} train + {} test) \n\
         Feature(s): {}\n\
         Target(s): {}\n\
-        ", self, &self.data.len(),
+        ", self, &self.get_row_count(),
         &self.count_row_type(&RowType::Train),
         &self.count_row_type(&RowType::Test),
-        &self.count_column_type(&ColumnType::Feature),
-        &self.count_column_type(&ColumnType::Target)
+        &self.get_number_features(),
+        &self.get_number_targets()
     )
     }
 }

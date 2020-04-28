@@ -1,4 +1,3 @@
-pub mod activation;
 pub mod dataset;
 pub mod layers;
 pub mod sequential;

@@ -1,4 +1,3 @@
-use newron::activation::Activation;
 use newron::dataset::Dataset;
 use newron::layers::{dense::Dense, relu::ReLU};
 use newron::sequential::Sequential;
@@ -16,7 +15,7 @@ fn main() {
 
     let mut model = Sequential::new();
 
-    model.set_seed(777);
+    model.set_seed(42);
 
     model.add(Dense::new(3, 8));
     model.add(ReLU);
