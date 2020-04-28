@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod dataset_tests {
     use newron::dataset::Dataset;
+    use std::path::Path;
     #[test]
     // This test asserts a good implementation of
     // debug + display trait + loading from raw data
@@ -24,5 +25,15 @@ mod dataset_tests {
                       Target(s): 1\n";
 
         assert_eq!(format!("{:?}", dataset), result);
+    }
+
+    #[test]
+    fn test_load_csv() {
+        let dataset = Dataset::from_csv(Path::new("datasets/winequality-white.csv"), true).unwrap();
+
+        assert_eq!(dataset.get_number_features(), 11);
+        assert_eq!(dataset.get_number_targets(), 1);
+        assert_eq!(dataset.get_row_count(), 4898);
+
     }
 }

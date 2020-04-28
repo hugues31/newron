@@ -30,15 +30,8 @@ impl Tensor {
     pub fn random(shape: Vec<usize>, seed: u32) -> Tensor {
         let mut rng = Rand::new(seed);
 
-        // Throw a dice 100 times
         let number_values = shape.iter().product();
-        let data: Vec<f64> = (0..number_values).map(|_| rng.rand_float()).collect();
-        // println!("{:?}",data);
-
-        // Shuffle an array
-        // let mut v: Vec<u32> = (1..101).collect();
-        // rng.shuffle(&mut v);
-
+        let data: Vec<f64> = (0..number_values).map(|_| (rng.rand_float() - 0.5) * 2.0).collect();
         Tensor { data, shape }
     }
 
@@ -74,6 +67,28 @@ impl Tensor {
         }
     }
 
+    /// Compute the mean of the matrix along the `axis` specified.
+    /// 0 = along the column, 1 = along the row
+    pub fn get_mean(&self, axis: usize) -> Tensor {
+        let mut data = Vec::new();
+
+        let other_axis = if axis == 1 { 0 } else { 1 };
+
+        // the wording is not quite exact here
+        // row and col is indeed the row and col for axis == 0
+        // but row become col and col become when axis == 1
+        for row in 0..self.shape[other_axis] {
+            let mut acc = 0.0;
+            for col in 0..self.shape[axis] {
+                acc += self.get_value(row, col);
+            }
+            data.push(acc / self.shape[axis] as f64);
+        }
+
+        let shape = vec![1, data.len()];
+        Tensor::new(data, shape)
+    }
+
     /// Get 2d positioned value
     // 'data' is a flat array of f64
     fn get_value(&self, x: usize, y: usize) -> f64 {
@@ -92,7 +107,7 @@ impl Tensor {
 
     /// Creates a new Tensor where the function `f` is applied
     /// element-wise. Does not change the shape of tensor.
-    pub fn map(&self, f: &fn(f64) -> f64) -> Tensor {
+    pub fn map(&self, f: fn(f64) -> f64) -> Tensor {
         Tensor {
             data: self.data.to_vec().into_iter().map(f).collect(),
             shape: self.shape.to_vec(),
@@ -117,13 +132,12 @@ impl Tensor {
                 for j in 0..other.shape[1] {
                     t += other.data[j] * self.get_value(j, i);
                 }
-
                 sum_product.push(t);
             }
 
             return Tensor::new(sum_product, vec![1, self.shape[1]]);
         } else {
-            unimplemented!("Dot function not complete yet.")
+            unimplemented!("Dot function not complete yet dot({},{}).", self, other)
         }
     }
 
@@ -148,7 +162,7 @@ impl<'a, 'b> Add<&'b Tensor> for &'b Tensor {
 
     fn add(self, other: &'b Tensor) -> Tensor {
         if self.shape != other.shape {
-            panic!("Could not add 2 tensors of different");
+            panic!("Could not add 2 tensors of different. {} + {}", self, other);
         }
 
         Tensor {
@@ -363,11 +377,21 @@ impl fmt::Display for Tensor {
                 write!(f, "[{}]", result)
             }
             2 => {
+                // maximum of 4 decimals are shown
+                let decimals = 4;
                 let mut result = String::from("\n");
                 for row in 0..self.shape[0] {
                     result += "|";
                     for col in 0..self.shape[1] {
-                        result += &(self.get_value(row, col).to_string() + "  ")
+                        let mut value = self.get_value(row, col).to_string();
+                        
+                        if value.len() > decimals {
+                            value = value[0..decimals].to_string();
+                        }
+                        else {
+                            value = value.to_string() + &" ".repeat(decimals - &value.len());
+                        }
+                        result += &(value + "  ")
                     }
                     result += "|\n";
                 }

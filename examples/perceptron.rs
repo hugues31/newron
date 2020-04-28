@@ -1,6 +1,5 @@
-use newron::activation::Activation;
 use newron::dataset::Dataset;
-use newron::layer::Layer;
+use newron::layers::{dense::Dense, relu::ReLU};
 use newron::sequential::Sequential;
 
 fn main() {
@@ -16,17 +15,15 @@ fn main() {
 
     let mut model = Sequential::new();
 
-    let hidden_layer_1 = Layer::new(Activation::relu(), 5, 0.0);
-    let hidden_layer_2 = Layer::new(Activation::tanh(), 8, 0.2);
-    let output_layer = Layer::new(Activation::relu(), 1, 0.0);
+    model.set_seed(42);
 
-    model.set_seed(777);
+    model.add(Dense::new(3, 8));
+    model.add(ReLU);
 
-    model.add(hidden_layer_1);
-    model.add(hidden_layer_2);
-    model.add(output_layer);
+    model.add(Dense::new(8, 1));
+    model.add(ReLU);
 
-    model.fit(&dataset, 2_000, true);
+    model.fit(&dataset, 20, true);
 
     let features_to_predict = vec![0.0, 0.0, 1.0];
     let prediction = model.predict(&features_to_predict);

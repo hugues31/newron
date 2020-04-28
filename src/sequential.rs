@@ -1,11 +1,13 @@
 /// The Sequential model is a linear stack of layers.
-use crate::layer::Layer;
+use std::cmp;
+
+use crate::layers::layer::Layer;
 use crate::tensor::Tensor;
 use crate::dataset::{Dataset, RowType, ColumnType};
+use crate::random::Rand;
 
 pub struct Sequential {
-    pub layers: Vec<Layer>,
-    weights: Vec<Tensor>,
+    pub layers: Vec<Box<dyn Layer>>,
     seed: u32,
 }
 
@@ -14,7 +16,6 @@ impl Sequential {
     pub fn new() -> Sequential {
         Sequential {
             layers: vec![],
-            weights: vec![],
             seed: 0,
         }
     }
@@ -25,35 +26,27 @@ impl Sequential {
     }
 
     /// Add a layer to the model
-    pub fn add(&mut self, layer: Layer) {
-        self.layers.push(layer);
+    pub fn add<T: 'static +  Layer>(&mut self, layer: T) {
+        self.layers.push(Box::new(layer));
     }
 
     // Return the list of layer outputs given an input
     fn forward_propagation(&mut self, input: &Tensor, train: bool) -> Vec<Tensor> {
-        // Forward propagation
-        let mut outputs: Vec<Tensor> = Vec::new();
-        // ouput of the first layer is the training sample...
-        outputs.push(input.get_transpose());
-        self.seed += 1;
-        for (i, w) in self.weights.iter().enumerate() {
-            if train {
-                let dropout = &self.layers[i].dropout;
-                let dropout_mask = Tensor::mask(&w.shape, *dropout, self.seed);
+        // Compute activations of all network layers by applying them sequentially.
+        // Return a list of activations for each layer.
 
-                let output = (&((1.0 / (1.0 - dropout)) * w.mult_el(&dropout_mask))
-                    * outputs.last().unwrap())
-                .map(&self.layers[i].activation.activation());
+        let mut activations: Vec<Tensor> = Vec::new();
+        
+        // First propagation with the input
+        activations.push(self.layers.first().unwrap().forward(&input));
 
-                outputs.push(output);
-            } else {
-                let output =
-                    (w * &outputs.last().unwrap()).map(&self.layers[i].activation.activation());
-                outputs.push(output);
-            }
+        // Next propagations with the last propagated values
+        for layer in self.layers.iter().skip(1) {
+            activations.push(layer.forward(activations.last().unwrap()));
         }
 
-        outputs
+        assert_eq!(activations.len(), self.layers.len());
+        activations
     }
 
     /// Use this function to train the model on x_train with target y_train.
@@ -61,78 +54,47 @@ impl Sequential {
     pub fn fit(&mut self, dataset: &Dataset, epochs: u32, verbose: bool) {
         let x_train = dataset.get_tensor(RowType::Train, ColumnType::Feature); 
         let y_train = dataset.get_tensor(RowType::Train, ColumnType::Target);
+        
+        // auto batch size : TODO improve it
+        let batch_size = cmp::min(x_train.shape[0], 32);
 
-        let alpha = 0.002;
+        for _ in 0..epochs {
+            let mut indices = (0..x_train.shape[0]).collect::<Vec<usize>>();
+            let mut rand = Rand::new(self.seed);
+            rand.shuffle(&mut indices[..]);
 
-        // Initialize weights with random values
-        self.weights.clear();
-        for i in 0..self.layers.len() {
-            let unit = self.layers[i].unit;
-            let input_size = if i == 0 {
-                x_train.shape[1]
-            } else {
-                self.layers[i - 1].unit
-            };
-            self.weights
-                .push(Tensor::random(vec![unit, input_size], self.seed));
-        }
-
-        for iteration in 0..epochs {
-            let mut error = 0.0;
-
-            // iterate through samples
-            for i in 0..x_train.shape[0] {
-                // SGD implementation below
-
-                // Forward propagation
-                let outputs = &self.forward_propagation(&x_train.get_row(i), true);
-
-                // Compute error TODO: compute error on verbose only (or early stopping)
-                error += (outputs.last().unwrap() - &y_train.get_row(i))[0].powi(2);
-
-                // Compute backward pass
-                let mut gradients: Vec<Tensor> = Vec::new();
-                // First gradient (delta L)
-                let gradient = outputs.last().unwrap() - &y_train.get_row(i);
-                gradients.push(
-                    gradient.mult_el(
-                        &(self.weights.last().unwrap() * &outputs[outputs.len() - 2])
-                            .map(&self.layers.last().unwrap().activation.deriv_activation()),
-                    ),
-                );
-
-                // Other gradients (delta i)
-                for (i, w) in self.weights.iter().skip(1).rev().enumerate() {
-                    let left_gradient = &w.get_transpose() * &gradients.last().unwrap();
-                    let right_gradient = (&self.weights[self.weights.len() - 2 - i]
-                        * &outputs[outputs.len() - 3 - i])
-                        .map(
-                            &self.layers[self.layers.len() - 2 - i]
-                                .activation
-                                .deriv_activation(),
-                        );
-                    let gradient = left_gradient.mult_el(&right_gradient);
-                    gradients.push(gradient);
-                }
-
-                // Weight update
-                for (i, w) in self.weights.iter_mut().enumerate() {
-                    *w -=
-                        alpha * (&gradients[gradients.len() - 1 - i] * &outputs[i].get_transpose());
-                }
+            for training_indices in &indices[0..batch_size] {
+                let x_batch = x_train.get_row(*training_indices);
+                let y_batch = y_train.get_row(*training_indices);
+                let loss = self.step(&x_batch, &y_batch);
+                if verbose { println!("Loss: {}", loss) };
             }
-            if verbose {
-                if iteration % 10 == 9 {
-                    println!("Error: {}", error);
-                }
-            }
+            
         }
+    }
+
+
+    /// Train the network and return the loss
+    pub fn step(&mut self, x_batch: &Tensor, y_batch: &Tensor) -> f64 {
+        let mut layer_activations = self.forward_propagation(x_batch, true);
+        layer_activations.insert(0, x_batch.clone());
+        let loss = (&layer_activations.last().unwrap().get_transpose() - &y_batch).map(|x| x*x).data.iter().sum::<f64>();
+        let mut loss_grad = &layer_activations.last().unwrap().get_transpose() - &y_batch;
+
+        // Propagate gradients through the network
+        // Reverse propogation as this is backprop
+        for (i, layer) in self.layers.iter_mut().skip(1).rev().enumerate() {
+            let i = layer_activations.len() - 2 - i;
+            loss_grad = layer.backward(&layer_activations[i], loss_grad);
+        }
+        
+        loss
     }
 
     pub fn predict(&mut self, input: &Vec<f64>) -> Tensor {
         let tensor_input = Tensor::new(input.to_vec(), vec![1, input.to_vec().len()]);
 
-      // The output of the network is the last layer output
+        // The output of the network is the last layer output
         match self.forward_propagation(&tensor_input, false).last() {
             Some(x) => x.clone(),
             None => panic!("No prediction."),
