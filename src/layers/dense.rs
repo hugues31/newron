@@ -39,7 +39,7 @@ impl Layer for Dense {
         assert_eq!(grad_weights.shape, self.weights.shape, "Wrong shape for weight gradients.");
         assert_eq!(grad_biases.shape, self.biases.shape, "Wrong shape for biases gradients.");
 
-        let alpha = 0.02;
+        let alpha = 0.002;
 
         self.weights -= alpha * grad_weights;
         self.biases -= alpha * grad_biases;
