@@ -138,7 +138,7 @@ impl Sequential {
         for (i, layer) in self.layers.iter_mut().skip(0).rev().enumerate() {
             let i = layer_activations.len() - 2 - i;
             loss_grad = layer.backward(&layer_activations[i], loss_grad);
-            // println!("*/*/\nLoss grad {}\n=====\n\n", loss_grad);
+            println!("Loss grad {} {}\n=====\n\n", i, loss_grad);
         }
         
         // loss
