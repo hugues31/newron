@@ -11,7 +11,7 @@ fn main() {
 
     let mut model = Sequential::new();
 
-    model.set_seed(777);
+    model.set_seed(42);
 
     model.add(Dense::new(11, 40));
     model.add(ReLU);
@@ -19,5 +19,5 @@ fn main() {
     model.add(Dense::new(40, 1));
     model.add(ReLU);
 
-    model.fit(&dataset, 2_000, true);
+    model.fit(&dataset, 20, true);
 }

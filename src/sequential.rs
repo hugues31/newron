@@ -60,11 +60,12 @@ impl Sequential {
         // output_unit_l == input_unit_l+1, output_unit_l_n = y_train.len()) and display message here
         
         // auto batch size : TODO improve it
-        let batch_size = cmp::min(x_train.shape[0], 5);
+        let batch_size = cmp::min(x_train.shape[0], 64);
 
         for _ in 0..epochs {
             let mut indices = (0..x_train.shape[0]).collect::<Vec<usize>>();
-            let shuffle = true; // TODO: make shuffle a parameter
+            // [0..x_train.shape[0].len() - batch_size + 1]
+            let shuffle = false; // TODO: make shuffle a parameter
             if shuffle {
                 let mut rand = Rand::new(self.seed);
                 rand.shuffle(&mut indices[..]);
@@ -72,7 +73,8 @@ impl Sequential {
             }
 
             for batch_start_indice in indices.iter().step_by(batch_size) {
-                let batch_indices: &[usize] = &indices[*batch_start_indice..*batch_start_indice+batch_size];
+                if *batch_start_indice > x_train.shape[0] - batch_size + 1 { break }
+                let batch_indices: &[usize] = &indices[*batch_start_indice..*batch_start_indice + batch_size];
                 let x_batch = x_train.get_rows(batch_indices);
                 let y_batch = y_train.get_rows(batch_indices);
 
@@ -98,10 +100,9 @@ impl Sequential {
         layer_activations.insert(0, x_batch.clone());
 
         // Compute the loss and the initial gradient
-        let loss = (&layer_activations.last().unwrap().get_transpose() - &y_batch).map(|x| x*x).data.iter().sum::<f64>();
+        let loss = (layer_activations.last().unwrap() - y_batch).map(|x| x*x).get_mean(0);
+        let mut loss_grad = layer_activations.last().unwrap() - y_batch;
         
-        let mut loss_grad = &layer_activations.last().unwrap().get_transpose() - &y_batch;
-
         // Propagate gradients through the network
         // Reverse propogation as this is backprop
         for (i, layer) in self.layers.iter_mut().skip(1).rev().enumerate() {
@@ -109,7 +110,8 @@ impl Sequential {
             loss_grad = layer.backward(&layer_activations[i], loss_grad);
         }
         
-        loss
+        // loss
+        loss.get_mean(1).data[0]
     }
 
     pub fn predict(&mut self, input: &Vec<f64>) -> Tensor {

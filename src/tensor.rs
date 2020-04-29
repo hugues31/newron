@@ -2,6 +2,7 @@
 
 use crate::random::Rand;
 
+use std::cmp;
 use std::fmt;
 use std::ops::{Add, Index, Mul, Sub, SubAssign};
 
@@ -21,6 +22,14 @@ impl Tensor {
     pub fn zero(shape: Vec<usize>) -> Tensor {
         Tensor {
             data: vec![0.0; shape.iter().product()],
+            shape,
+        }
+    }
+
+    /// Creates a Tensor filled with ones with the `shape` specified.
+    pub fn one(shape: Vec<usize>) -> Tensor {
+        Tensor {
+            data: vec![1.0; shape.iter().product()],
             shape,
         }
     }
@@ -80,7 +89,12 @@ impl Tensor {
         for row in 0..self.shape[other_axis] {
             let mut acc = 0.0;
             for col in 0..self.shape[axis] {
-                acc += self.get_value(row, col);
+                if axis == 0 {
+                    acc += self.get_value(col, row);
+                } else {
+                    acc += self.get_value(row, col);
+                }
+                
             }
             data.push(acc / self.shape[axis] as f64);
         }
@@ -149,13 +163,9 @@ impl Tensor {
 
             return Tensor::new(sum_product, vec![1, self.shape[1]]);
         } else if self.shape[1] == other.shape[0] {
-            let mut data = Vec::new();
-            return  Tensor {
-                shape: vec![self.shape[0], other.shape[1]],
-                data
-            };
+            return self * other;
         } else {
-            unimplemented!("Dot function not complete yet dot({},{}).", self, other)
+            unimplemented!("Dot function not complete yet dot({:?},{:?}).", self, other)
         }
     }
 
@@ -179,17 +189,21 @@ impl<'a, 'b> Add<&'b Tensor> for &'b Tensor {
     type Output = Tensor;
 
     fn add(self, other: &'b Tensor) -> Tensor {
-        if self.shape != other.shape {
-            panic!("Could not add 2 tensors of different. {} + {}", self, other);
+        if self.shape.len() > 1 && other.shape.len() > 1 {
+            if self.shape[1] != other.shape[1] {
+                panic!("Could not add 2 tensors of different. {:?} + {:?}", self, other);
+            }          
+        }
+
+        let mut data = Vec::new();
+        for i in 0..cmp::max(self.data.len(), other.data.len()) {
+            let a = self.data[i % self.data.len()];
+            let b = other.data[i % other.data.len()];
+            data.push(a + b);
         }
 
         Tensor {
-            data: self
-                .data
-                .iter()
-                .zip(other.data.iter())
-                .map(|(a, b)| a + b)
-                .collect(),
+            data,
             shape: self.shape.to_vec(),
         }
     }
@@ -209,17 +223,21 @@ impl<'a, 'b> Sub<&'b Tensor> for &'b Tensor {
     type Output = Tensor;
 
     fn sub(self, other: &'b Tensor) -> Tensor {
-        if self.shape != other.shape {
-            panic!("Could not substract 2 tensors of different");
+        if self.shape.len() > 1 && other.shape.len() > 1 {
+            if self.shape[1] != other.shape[1] {
+                panic!("Could not substract 2 tensors of different. {:?} - {:?}", self, other);
+            }          
+        }
+
+        let mut data = Vec::new();
+        for i in 0..cmp::max(self.data.len(), other.data.len()) {
+            let a = self.data[i % self.data.len()];
+            let b = other.data[i % other.data.len()];
+            data.push(a - b);
         }
 
         Tensor {
-            data: self
-                .data
-                .iter()
-                .zip(other.data.iter())
-                .map(|(a, b)| a - b)
-                .collect(),
+            data,
             shape: self.shape.to_vec(),
         }
     }

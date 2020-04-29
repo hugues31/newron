@@ -43,6 +43,22 @@ mod tensor_tests {
     }
 
     #[test]
+    fn test_2d_1d_add() {
+        // 2x4 matrix
+        let a = Tensor::new(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
+            vec![2, 4]);
+
+        // 1x4 matrix
+        let b = Tensor::new(vec![1.0, 2.0, 3.0, 4.0],
+            vec![1, 4]);
+
+        let result = Tensor::new(vec![1.0, 3.0, 5.0, 7.0, 5.0, 7.0, 9.0, 11.0], vec![2, 4]);
+
+        assert_eq!(a + b, result)
+
+    }
+
+    #[test]
     fn test_get_row() {
         // 2x2 matrix
         let a = Tensor::new(vec![1.0, 2.0,
@@ -133,6 +149,28 @@ mod tensor_tests {
     fn test_mask() {
          let mask = Tensor::mask(&vec![10, 10], 0.4, 777);
          assert_eq!(mask.data.iter().sum::<f64>() as usize, 60);
+    }
+
+    #[test]
+    fn test_get_mean_axis_0() {
+        let a = Tensor::new(vec![
+            1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0], vec![2,3]);
+        
+        let result = Tensor::new(vec![2.5, 3.5, 4.5], vec![1, 3]);
+
+        assert_eq!(a.get_mean(0), result);
+    }
+
+    #[test]
+    fn test_get_mean_axis_1() {
+        let a = Tensor::new(vec![
+            1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0], vec![2,3]);
+        
+        let result = Tensor::new(vec![2.0, 5.0], vec![1, 2]);
+
+        assert_eq!(a.get_mean(1), result);
     }
 
 }
