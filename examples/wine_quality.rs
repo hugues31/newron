@@ -19,5 +19,5 @@ fn main() {
     model.add(Dense::new(10, dataset.get_number_targets()));
     model.add(ReLU);
 
-    model.fit(&dataset, 20, true);
+    model.fit(&dataset, 200, true);
 }

@@ -56,7 +56,7 @@ impl Sequential {
         let x_train = dataset.get_tensor(RowType::Train, ColumnType::Feature); 
         let y_train = dataset.get_tensor(RowType::Train, ColumnType::Target);
         
-        let mut indices = (0..x_train.shape[1]).collect::<Vec<usize>>();
+        let mut indices = (0..x_train.shape[0]).collect::<Vec<usize>>();
 
         if shuffle {
             let mut rand = Rand::new(self.seed);
@@ -66,7 +66,7 @@ impl Sequential {
 
         let mut result = Vec::new();
 
-        for batch_index in (0..x_train.shape[1]).rev().skip(batch_size - 1).step_by(batch_size).rev() {
+        for batch_index in (0..x_train.shape[0]).rev().skip(batch_size - 1).step_by(batch_size).rev() {
             let batch_indices: &[usize] = &indices[batch_index..batch_index + batch_size];
 
             let x_batch = x_train.get_rows(batch_indices);
@@ -90,7 +90,7 @@ impl Sequential {
 
         for _ in 0..epochs {
             let batches = self.get_batches(dataset, batch_size, true);
-            
+
             for batch in batches {
                 let x_batch = batch.0;
                 let y_batch = batch.1;
