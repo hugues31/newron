@@ -88,14 +88,29 @@ impl Sequential {
         // auto batch size : TODO improve it
         let batch_size = cmp::min(dataset.get_row_count(), 64);
 
-        for _ in 0..epochs {
+        for epoch in 0..epochs {
             let batches = self.get_batches(dataset, batch_size, true);
 
-            for batch in batches {
-                let x_batch = batch.0;
-                let y_batch = batch.1;
-                let loss = self.step(&x_batch, &y_batch);
-                if verbose { println!("Loss: {}", loss) };
+            for batch in &batches {
+                let x_batch = &batch.0;
+                let y_batch = &batch.1;
+                let _loss = self.step(x_batch, y_batch);
+            }
+
+            if verbose {
+                println!("Epoch: {}", epoch);
+
+                let train_predictions = self.predict_tensor(&dataset.get_tensor(RowType::Train, ColumnType::Feature));
+                let train_true_values = &dataset.get_tensor(RowType::Train, ColumnType::Target);
+                let train_err = (&train_predictions - train_true_values).map(|x| x*x).get_mean(0).get_mean(1).data[0];
+                println!("Train error: {}", train_err);
+
+                if dataset.count_row_type(&RowType::Test) > 0 {
+                    let test_predictions = self.predict_tensor(&dataset.get_tensor(RowType::Test, ColumnType::Feature));
+                    let test_true_values = &dataset.get_tensor(RowType::Test, ColumnType::Target);
+                    let test_err = (&test_predictions - test_true_values).map(|x| x*x).get_mean(0).get_mean(1).data[0];
+                    println!("Test error: {}", test_err);
+                }
             }
         }
     }
@@ -132,9 +147,12 @@ impl Sequential {
 
     pub fn predict(&mut self, input: &Vec<f64>) -> Tensor {
         let tensor_input = Tensor::new(input.to_vec(), vec![1, input.to_vec().len()]);
+        self.predict_tensor(&tensor_input)
+    }
 
+    pub fn predict_tensor(&mut self, input: &Tensor) -> Tensor {
         // The output of the network is the last layer output
-        match self.forward_propagation(&tensor_input, false).last() {
+        match self.forward_propagation(&input, false).last() {
             Some(x) => x.clone(),
             None => panic!("No prediction."),
         }

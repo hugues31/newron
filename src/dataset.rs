@@ -280,7 +280,7 @@ impl Dataset {
         self.columns_metadata.iter().filter(|&n| n.column_type == *col_type).count()
     }
 
-    fn count_row_type(&self, row_type: &RowType) -> usize {
+    pub fn count_row_type(&self, row_type: &RowType) -> usize {
         self.data.iter().filter(|&r| r.row_type == *row_type).count()
     }
 
