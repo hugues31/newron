@@ -50,38 +50,51 @@ impl Sequential {
         activations
     }
 
+    /// Return a vector containing all batch
+    /// if `shuffle` is set to true, batches are randomized
+    fn get_batches(&mut self, dataset: &Dataset, batch_size: usize, shuffle: bool) -> Vec<(Tensor, Tensor)> {
+        let x_train = dataset.get_tensor(RowType::Train, ColumnType::Feature); 
+        let y_train = dataset.get_tensor(RowType::Train, ColumnType::Target);
+
+        let mut indices = (0..dataset.get_row_count()).collect::<Vec<usize>>();
+
+        if shuffle {
+            let mut rand = Rand::new(self.seed);
+            rand.shuffle(&mut indices[..]);
+            self.seed += 1;
+        }
+
+        let mut result = Vec::new();
+
+        for batch_index in (0..dataset.get_row_count()).rev().skip(batch_size - 1).step_by(batch_size).rev() {
+            let batch_indices: &[usize] = &indices[batch_index..batch_index + batch_size];
+            let x_batch = x_train.get_rows(batch_indices);
+            let y_batch = y_train.get_rows(batch_indices);
+            result.push((x_batch, y_batch));
+        }
+
+        result
+    }
+
     /// Use this function to train the model on x_train with target y_train.
     /// Set `verbose` to true to see debugging and training information.
     pub fn fit(&mut self, dataset: &Dataset, epochs: u32, verbose: bool) {
-        let x_train = dataset.get_tensor(RowType::Train, ColumnType::Feature); 
-        let y_train = dataset.get_tensor(RowType::Train, ColumnType::Target);
 
         // TODO: Check model architecture (input_unit == x_train.len(),
         // output_unit_l == input_unit_l+1, output_unit_l_n = y_train.len()) and display message here
         
         // auto batch size : TODO improve it
-        let batch_size = cmp::min(x_train.shape[0], 64);
+        let batch_size = cmp::min(dataset.get_row_count(), 64);
 
         for _ in 0..epochs {
-            let mut indices = (0..x_train.shape[0]).collect::<Vec<usize>>();
-
-            let shuffle = false; // TODO: make shuffle a parameter
-            if shuffle {
-                let mut rand = Rand::new(self.seed);
-                rand.shuffle(&mut indices[..]);
-                self.seed += 1;
-            }
-
-            for batch_start_indice in indices.iter().step_by(batch_size) {
-                if *batch_start_indice > x_train.shape[0] - batch_size + 1 { break }
-                let batch_indices: &[usize] = &indices[*batch_start_indice..*batch_start_indice + batch_size];
-                let x_batch = x_train.get_rows(batch_indices);
-                let y_batch = y_train.get_rows(batch_indices);
-
+            let batches = self.get_batches(dataset, batch_size, true);
+            
+            for batch in batches {
+                let x_batch = batch.0;
+                let y_batch = batch.1;
                 let loss = self.step(&x_batch, &y_batch);
                 if verbose { println!("Loss: {}", loss) };
             }
-            
         }
     }
 
