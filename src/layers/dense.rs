@@ -8,8 +8,10 @@ pub struct Dense {
 
 impl Dense {
     pub fn new(input_units: usize, output_units: usize) -> Dense {
+        // initialize with random values following special normal distribution
+        // allowing theoritical faster convergence (Xavier Initialization)
         Dense {
-            weights: Tensor::random(vec![input_units, output_units], 42),
+            weights: Tensor::random_normal(vec![input_units, output_units], 0.0, 2.0 / (input_units + output_units) as f64,42),
             biases: Tensor::one(vec![1, output_units])
         }
     }
@@ -39,7 +41,7 @@ impl Layer for Dense {
         assert_eq!(grad_weights.shape, self.weights.shape, "Wrong shape for weight gradients.");
         assert_eq!(grad_biases.shape, self.biases.shape, "Wrong shape for biases gradients.");
 
-        let alpha = 0.002;
+        let alpha = 0.1;
 
         self.weights -= alpha * grad_weights;
         self.biases -= alpha * grad_biases;

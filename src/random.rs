@@ -38,6 +38,7 @@ impl Rand{
         return a+(self.rand()%m) as i32;
     }
 
+    /// Return a f64 uniformly distributed between 0 and 1
     pub fn rand_float(&mut self) -> f64 {
         (self.rand() as f64)/(<u32>::max_value() as f64)
     }

@@ -5,6 +5,7 @@ use crate::random::Rand;
 use std::cmp;
 use std::fmt;
 use std::ops::{Add, Index, Mul, Sub, SubAssign};
+use std::f64::consts::PI;
 
 #[derive(Clone)]
 pub struct Tensor {
@@ -34,13 +35,30 @@ impl Tensor {
         }
     }
 
-    /// Creates a Tensor filled with random values between -1 and +1 with the
-    /// `shape` specified.
+    /// Creates a Tensor filled with uniformly distributed random values
+    /// between -1 and +1 with the `shape` specified.
     pub fn random(shape: Vec<usize>, seed: u32) -> Tensor {
         let mut rng = Rand::new(seed);
 
         let number_values = shape.iter().product();
         let data: Vec<f64> = (0..number_values).map(|_| (rng.rand_float() - 0.5) * 2.0).collect();
+        Tensor { data, shape }
+    }
+
+    /// Generates a Tensor filled with random values following a normal distribution
+    /// with parameters mu and sigma specified (mean/stdev)
+    pub fn random_normal(shape: Vec<usize>, mean: f64, stdev: f64, seed: u32) -> Tensor {
+        // We use the Box-Muller method to generate random normal values
+        // Formula: sqrt(-2*ln(rand()))*cos(2*Pi*rand()) * stdev + mean
+        let mut rng = Rand::new(seed);
+
+        let number_values = shape.iter().product();
+
+        let data: Vec<f64> = (0..number_values).map(|_| (
+            // formula
+            ((-2.0 * rng.rand_float().ln()).sqrt() * (2.0 * PI * rng.rand_float()).cos()) * stdev + mean
+        )).collect();
+
         Tensor { data, shape }
     }
 

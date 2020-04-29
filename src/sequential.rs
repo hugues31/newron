@@ -64,7 +64,7 @@ impl Sequential {
 
         for _ in 0..epochs {
             let mut indices = (0..x_train.shape[0]).collect::<Vec<usize>>();
-            // [0..x_train.shape[0].len() - batch_size + 1]
+
             let shuffle = false; // TODO: make shuffle a parameter
             if shuffle {
                 let mut rand = Rand::new(self.seed);
@@ -95,7 +95,6 @@ impl Sequential {
         // After we have called backward for all layers, all Dense layers have already made one gradient step.
 
         // Get the layer activations
-        
         let mut layer_activations = self.forward_propagation(x_batch, true);
         layer_activations.insert(0, x_batch.clone());
 
