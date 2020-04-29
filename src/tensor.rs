@@ -405,10 +405,7 @@ impl PartialEq for Tensor {
 // Implement Debug
 impl fmt::Debug for Tensor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Tensor")
-            .field("data", &format_args!("{}", self))
-            .field("shape", &self.shape)
-            .finish()
+        write!(f, "{}{:?}\n", self, self.shape)
     }
 }
 

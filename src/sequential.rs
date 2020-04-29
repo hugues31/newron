@@ -55,8 +55,8 @@ impl Sequential {
     fn get_batches(&mut self, dataset: &Dataset, batch_size: usize, shuffle: bool) -> Vec<(Tensor, Tensor)> {
         let x_train = dataset.get_tensor(RowType::Train, ColumnType::Feature); 
         let y_train = dataset.get_tensor(RowType::Train, ColumnType::Target);
-
-        let mut indices = (0..dataset.get_row_count()).collect::<Vec<usize>>();
+        
+        let mut indices = (0..x_train.shape[1]).collect::<Vec<usize>>();
 
         if shuffle {
             let mut rand = Rand::new(self.seed);
@@ -66,13 +66,15 @@ impl Sequential {
 
         let mut result = Vec::new();
 
-        for batch_index in (0..dataset.get_row_count()).rev().skip(batch_size - 1).step_by(batch_size).rev() {
+        for batch_index in (0..x_train.shape[1]).rev().skip(batch_size - 1).step_by(batch_size).rev() {
             let batch_indices: &[usize] = &indices[batch_index..batch_index + batch_size];
+
             let x_batch = x_train.get_rows(batch_indices);
+
             let y_batch = y_train.get_rows(batch_indices);
             result.push((x_batch, y_batch));
         }
-
+    
         result
     }
 
@@ -113,13 +115,15 @@ impl Sequential {
 
         // Compute the loss and the initial gradient
         let loss = (layer_activations.last().unwrap() - y_batch).map(|x| x*x).get_mean(0);
+        // println!("{:?} - {:?})^2 = {:?}", layer_activations.last().unwrap(), y_batch, loss);
         let mut loss_grad = layer_activations.last().unwrap() - y_batch;
         
         // Propagate gradients through the network
         // Reverse propogation as this is backprop
-        for (i, layer) in self.layers.iter_mut().skip(1).rev().enumerate() {
+        for (i, layer) in self.layers.iter_mut().skip(0).rev().enumerate() {
             let i = layer_activations.len() - 2 - i;
             loss_grad = layer.backward(&layer_activations[i], loss_grad);
+            // println!("*/*/\nLoss grad {}\n=====\n\n", loss_grad);
         }
         
         // loss

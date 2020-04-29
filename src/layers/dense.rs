@@ -43,9 +43,10 @@ impl Layer for Dense {
 
         let alpha = 0.1;
 
+        // println!("ancien poids {:?}", self.weights);
         self.weights -= alpha * grad_weights;
         self.biases -= alpha * grad_biases;
-
+        // println!("nouveau poids {:?}", self.weights);
         grad_input
     }
 }
