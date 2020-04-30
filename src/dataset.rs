@@ -147,7 +147,7 @@ impl Dataset {
             let mut buf = vec![0u8;vector_size];
             images_file.read(&mut buf).unwrap();
             let mut pixels = utils::to_vec_f64(&buf);
-
+            pixels = pixels.into_iter().map(|x| x / 255.0).collect();
             // read label
             let mut label = vec![0u8;1];
             labels_file.read(&mut label).unwrap();
@@ -280,7 +280,7 @@ impl Dataset {
         self.columns_metadata.iter().filter(|&n| n.column_type == *col_type).count()
     }
 
-    fn count_row_type(&self, row_type: &RowType) -> usize {
+    pub fn count_row_type(&self, row_type: &RowType) -> usize {
         self.data.iter().filter(|&r| r.row_type == *row_type).count()
     }
 

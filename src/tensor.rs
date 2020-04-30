@@ -2,8 +2,10 @@
 
 use crate::random::Rand;
 
+use std::cmp;
 use std::fmt;
 use std::ops::{Add, Index, Mul, Sub, SubAssign};
+use std::f64::consts::PI;
 
 #[derive(Clone)]
 pub struct Tensor {
@@ -25,13 +27,38 @@ impl Tensor {
         }
     }
 
-    /// Creates a Tensor filled with random values between -1 and +1 with the
-    /// `shape` specified.
+    /// Creates a Tensor filled with ones with the `shape` specified.
+    pub fn one(shape: Vec<usize>) -> Tensor {
+        Tensor {
+            data: vec![1.0; shape.iter().product()],
+            shape,
+        }
+    }
+
+    /// Creates a Tensor filled with uniformly distributed random values
+    /// between -1 and +1 with the `shape` specified.
     pub fn random(shape: Vec<usize>, seed: u32) -> Tensor {
         let mut rng = Rand::new(seed);
 
         let number_values = shape.iter().product();
         let data: Vec<f64> = (0..number_values).map(|_| (rng.rand_float() - 0.5) * 2.0).collect();
+        Tensor { data, shape }
+    }
+
+    /// Generates a Tensor filled with random values following a normal distribution
+    /// with parameters mu and sigma specified (mean/stdev)
+    pub fn random_normal(shape: Vec<usize>, mean: f64, stdev: f64, seed: u32) -> Tensor {
+        // We use the Box-Muller method to generate random normal values
+        // Formula: sqrt(-2*ln(rand()))*cos(2*Pi*rand()) * stdev + mean
+        let mut rng = Rand::new(seed);
+
+        let number_values = shape.iter().product();
+
+        let data: Vec<f64> = (0..number_values).map(|_| (
+            // formula
+            ((-2.0 * rng.rand_float().ln()).sqrt() * (2.0 * PI * rng.rand_float()).cos()) * stdev + mean
+        )).collect();
+
         Tensor { data, shape }
     }
 
@@ -80,7 +107,12 @@ impl Tensor {
         for row in 0..self.shape[other_axis] {
             let mut acc = 0.0;
             for col in 0..self.shape[axis] {
-                acc += self.get_value(row, col);
+                if axis == 0 {
+                    acc += self.get_value(col, row);
+                } else {
+                    acc += self.get_value(row, col);
+                }
+                
             }
             data.push(acc / self.shape[axis] as f64);
         }
@@ -102,6 +134,18 @@ impl Tensor {
         Tensor {
             data: self.data[i * &self.shape[1]..(i + 1) * &self.shape[1]].to_vec(),
             shape: vec![1, self.shape[1]],
+        }
+    }
+
+    /// Get all rows from a vector containing indices
+    pub fn get_rows(&self, indices: &[usize]) -> Tensor {
+        let mut data = Vec::new();
+        for i in indices {
+            data.extend(self.get_row(*i).data.iter());
+        }
+        Tensor {
+            data,
+            shape: vec![indices.len(), self.shape[1]],
         }
     }
 
@@ -136,8 +180,10 @@ impl Tensor {
             }
 
             return Tensor::new(sum_product, vec![1, self.shape[1]]);
+        } else if self.shape[1] == other.shape[0] {
+            return self * other;
         } else {
-            unimplemented!("Dot function not complete yet dot({},{}).", self, other)
+            unimplemented!("Dot function not complete yet dot({:?},{:?}).", self, other)
         }
     }
 
@@ -161,17 +207,21 @@ impl<'a, 'b> Add<&'b Tensor> for &'b Tensor {
     type Output = Tensor;
 
     fn add(self, other: &'b Tensor) -> Tensor {
-        if self.shape != other.shape {
-            panic!("Could not add 2 tensors of different. {} + {}", self, other);
+        if self.shape.len() > 1 && other.shape.len() > 1 {
+            if self.shape[1] != other.shape[1] {
+                panic!("Could not add 2 tensors of different. {:?} + {:?}", self, other);
+            }          
+        }
+
+        let mut data = Vec::new();
+        for i in 0..cmp::max(self.data.len(), other.data.len()) {
+            let a = self.data[i % self.data.len()];
+            let b = other.data[i % other.data.len()];
+            data.push(a + b);
         }
 
         Tensor {
-            data: self
-                .data
-                .iter()
-                .zip(other.data.iter())
-                .map(|(a, b)| a + b)
-                .collect(),
+            data,
             shape: self.shape.to_vec(),
         }
     }
@@ -191,17 +241,21 @@ impl<'a, 'b> Sub<&'b Tensor> for &'b Tensor {
     type Output = Tensor;
 
     fn sub(self, other: &'b Tensor) -> Tensor {
-        if self.shape != other.shape {
-            panic!("Could not substract 2 tensors of different");
+        if self.shape.len() > 1 && other.shape.len() > 1 {
+            if self.shape[1] != other.shape[1] {
+                panic!("Could not substract 2 tensors of different. {:?} - {:?}", self, other);
+            }          
+        }
+
+        let mut data = Vec::new();
+        for i in 0..cmp::max(self.data.len(), other.data.len()) {
+            let a = self.data[i % self.data.len()];
+            let b = other.data[i % other.data.len()];
+            data.push(a - b);
         }
 
         Tensor {
-            data: self
-                .data
-                .iter()
-                .zip(other.data.iter())
-                .map(|(a, b)| a - b)
-                .collect(),
+            data,
             shape: self.shape.to_vec(),
         }
     }
@@ -351,10 +405,7 @@ impl PartialEq for Tensor {
 // Implement Debug
 impl fmt::Debug for Tensor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Tensor")
-            .field("data", &format_args!("{}", self))
-            .field("shape", &self.shape)
-            .finish()
+        write!(f, "{}{:?}\n", self, self.shape)
     }
 }
 

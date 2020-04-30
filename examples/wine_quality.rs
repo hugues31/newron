@@ -11,10 +11,13 @@ fn main() {
 
     let mut model = Sequential::new();
 
-    model.set_seed(777);
+    model.set_seed(42);
 
-    model.add(Dense::new(11, 40));
+    model.add(Dense::new(dataset.get_number_features(), 10));
     model.add(ReLU);
 
-    model.fit(&dataset, 2_000, true);
+    model.add(Dense::new(10, dataset.get_number_targets()));
+    model.add(ReLU);
+
+    model.fit(&dataset, 200, true);
 }
