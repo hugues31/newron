@@ -1,5 +1,5 @@
 use newron::dataset::Dataset;
-use newron::layers::{dense::Dense, relu::ReLU};
+use newron::layers::{dense::Dense, relu::ReLU, softmax::Softmax};
 use newron::sequential::Sequential;
 
 fn main() {
@@ -19,7 +19,7 @@ fn main() {
     model.add(ReLU);
 
     model.add(Dense::new(8, 1));
-    model.add(ReLU);
+    model.add(Softmax);
 
     model.fit(&dataset, 42, true);
 

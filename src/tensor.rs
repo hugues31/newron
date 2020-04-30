@@ -97,6 +97,7 @@ impl Tensor {
     /// Compute the mean of the matrix along the `axis` specified.
     /// 0 = along the column, 1 = along the row
     pub fn get_mean(&self, axis: usize) -> Tensor {
+        // TODO: refactor with same logic as get_max (or better!)
         let mut data = Vec::new();
 
         let other_axis = if axis == 1 { 0 } else { 1 };
@@ -118,6 +119,39 @@ impl Tensor {
         }
 
         let shape = vec![1, data.len()];
+        Tensor::new(data, shape)
+    }
+
+    /// Get the Tensor containing max values along the `axis` specified
+    /// 0 = along the column, 1 = along the row
+    pub fn get_max(&self, axis: usize) -> Tensor {
+        let mut data = Vec::new();
+
+        if axis == 0 {
+            for row in 0..self.shape[1] {
+                let mut max = 0.0;
+                for col in 0..self.shape[axis] {
+                    let val = self.get_value(col, row);
+                    if val > max {
+                        max = val;
+                    }
+                }
+                data.push(max);
+            }
+        } else {
+            for col in 0..self.shape[0] {
+                let mut max = 0.0;
+                for row in 0..self.shape[axis] {
+                    let val = self.get_value(col, row);
+                    if val > max {
+                        max = val;
+                    }
+                }
+                data.push(max);
+            }
+        }
+
+        let shape = if axis == 0 {vec![1, data.len()]} else {vec![data.len(), 1]};
         Tensor::new(data, shape)
     }
 

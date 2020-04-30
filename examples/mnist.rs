@@ -2,7 +2,10 @@ use std::path::Path;
 
 use newron::dataset::Dataset;
 use newron::layers::{dense::Dense, relu::ReLU};
+use newron::loss::{categorical_entropy::CategoricalEntropy, loss::Loss};
+use newron::metrics::Metrics;
 use newron::sequential::Sequential;
+use newron::optimizers::optimizer::Optimizer;
 
 fn main() {
     // Path to a folder containing the 4 files :
@@ -20,6 +23,12 @@ fn main() {
     model.add(ReLU);
     model.add(Dense::new(9, dataset.get_number_targets()));
     model.add(ReLU);
+
+    model.summary();
+
+    model.compile(CategoricalEntropy{},
+              Optimizer::SGD,
+              vec![Metrics::Accuracy]);
 
     model.fit(&dataset, 2_000, true);
 }

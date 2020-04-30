@@ -24,3 +24,7 @@ pub(crate) fn to_vec_f64(data: &Vec<u8>) -> Vec<f64> {
     }
     result
 }
+
+pub(crate) fn one_hot_encoded_to_value(data: &Vec<f64>) -> usize {
+    todo!()
+}

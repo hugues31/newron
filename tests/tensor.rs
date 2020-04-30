@@ -173,4 +173,27 @@ mod tensor_tests {
         assert_eq!(a.get_mean(1), result);
     }
 
+    #[test]
+    fn test_get_max_axis_0() {
+        let a = Tensor::new(vec![
+            1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0], vec![2,3]);
+        
+        let result = Tensor::new(vec![4.0, 5.0, 6.0], vec![1, 3]);
+
+        assert_eq!(a.get_max(0), result);
+    }
+
+    #[test]
+    fn test_get_max_axis_1() {
+        let a = Tensor::new(vec![
+            1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0], vec![2,3]);
+        
+        let result = Tensor::new(vec![3.0,
+                                                    6.0], vec![2, 1]);
+
+        assert_eq!(a.get_max(1), result);
+    }
+
 }

@@ -4,10 +4,13 @@ use std::cmp;
 use crate::layers::layer::Layer;
 use crate::tensor::Tensor;
 use crate::dataset::{Dataset, RowType, ColumnType};
-use crate::random::Rand;
-
+use crate::{loss::loss::Loss, random::Rand, optimizers::optimizer::Optimizer, metrics::Metrics};
+use crate::loss::categorical_entropy::CategoricalEntropy;
 pub struct Sequential {
     pub layers: Vec<Box<dyn Layer>>,
+    loss: Box<dyn Loss>,
+    optim: Optimizer,
+    metrics: Vec<Metrics>,
     seed: u32,
 }
 
@@ -16,6 +19,9 @@ impl Sequential {
     pub fn new() -> Sequential {
         Sequential {
             layers: vec![],
+            loss: Box::new(CategoricalEntropy{}),
+            optim: Optimizer::SGD,
+            metrics: vec![],
             seed: 0,
         }
     }
@@ -28,6 +34,19 @@ impl Sequential {
     /// Add a layer to the model
     pub fn add<T: 'static +  Layer>(&mut self, layer: T) {
         self.layers.push(Box::new(layer));
+    }
+
+    /// Get a summary of the model
+    pub fn summary(&self) {
+        // TODO: add more infos
+        println!("Sequential model using {} layers.", self.layers.len());
+    }
+
+    pub fn compile<T: 'static + Loss>(&mut self, loss: T, optim: Optimizer, metrics: Vec<Metrics>) {
+        // Set options
+        self.loss = Box::new(loss);
+        self.optim = optim;
+        self.metrics = metrics;
     }
 
     // Return the list of layer outputs given an input
@@ -138,7 +157,7 @@ impl Sequential {
         for (i, layer) in self.layers.iter_mut().skip(0).rev().enumerate() {
             let i = layer_activations.len() - 2 - i;
             loss_grad = layer.backward(&layer_activations[i], loss_grad);
-            println!("Loss grad {} {}\n=====\n\n", i, loss_grad);
+            // println!("Loss grad {} {}\n=====\n\n", i, loss_grad);
         }
         
         // loss
