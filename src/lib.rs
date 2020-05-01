@@ -6,4 +6,4 @@ pub mod metrics;
 pub mod sequential;
 pub mod tensor;
 mod random;
-mod utils;
+pub mod utils;

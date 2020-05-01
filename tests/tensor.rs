@@ -196,4 +196,37 @@ mod tensor_tests {
         assert_eq!(a.get_max(1), result);
     }
 
+    #[test]
+    fn test_get_sum_axis_0() {
+        let a = Tensor::new(vec![
+            1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0], vec![2,3]);
+        
+        let result = Tensor::new(vec![5.0, 7.0, 9.0], vec![1, 3]);
+
+        assert_eq!(a.get_sum(0), result);
+    }
+
+    #[test]
+    fn test_get_sum_axis_1() {
+        let a = Tensor::new(vec![
+            1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0], vec![2,3]);
+        
+        let result = Tensor::new(vec![6.0,
+                                                    15.0], vec![2, 1]);
+
+        assert_eq!(a.get_sum(1), result);
+    }
+
+    #[test]
+    fn test_divide() {
+        let a = Tensor::new(vec![4.0, 6.0, 8.0, 10.0], vec![1, 4]);
+        let b = Tensor::new(vec![4.0, 3.0, 5.0, 5.0], vec![1, 4]);
+
+        let result = Tensor::new(vec![1.0, 2.0, 1.6, 2.0], vec![1, 4]);
+
+        assert_eq!(a / b, result);
+    }
+
 }

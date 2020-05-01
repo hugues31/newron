@@ -7,18 +7,14 @@ impl Layer for Softmax {
     fn forward(&self, input: &Tensor) -> Tensor {
         // we use stable softmax instead of classic softmax
         // for computational stability
-        // z -= np.max(z)
-        // sm = (np.exp(z).T / np.sum(np.exp(z), axis=0)).T
-        // return sm
-        let max_input = input.get_max(1);
-        let normalized_input = &max_input - input;
-        let numerator = normalized_input.map(|x| x.exp()).get_transpose();
-        // let denominator = 
-        numerator
+
+        let normalized_input = input.normalize_rows();
+        let numerator = normalized_input.map(|x| x.exp());
+        let denominator = normalized_input.map(|x| x.exp()).get_sum(1);
+        numerator / denominator
     }
 
     fn backward(&mut self, input: &Tensor, grad_output: Tensor) -> Tensor {
-        let relu_grad = input.map(|x| if x > 0.0 { 1.0 } else { 0.0 });
-        grad_output.mult_el(&relu_grad)
+        unimplemented!()
     }
 }

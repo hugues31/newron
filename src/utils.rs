@@ -25,6 +25,11 @@ pub(crate) fn to_vec_f64(data: &Vec<u8>) -> Vec<f64> {
     result
 }
 
+pub fn round_vector(data: Vec<f64>, decimal_places: usize) -> Vec<f64> {
+    let decimal_places = 10.0f64.powf(decimal_places as f64);
+    data.iter().map(|x| (x * decimal_places).round()/decimal_places).collect()
+}
+
 pub(crate) fn one_hot_encoded_to_value(data: &Vec<f64>) -> usize {
     todo!()
 }
