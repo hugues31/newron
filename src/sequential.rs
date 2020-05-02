@@ -6,6 +6,8 @@ use crate::tensor::Tensor;
 use crate::dataset::{Dataset, RowType, ColumnType};
 use crate::{loss::loss::Loss, random::Rand, optimizers::optimizer::Optimizer, metrics::Metrics};
 use crate::loss::categorical_entropy::CategoricalEntropy;
+use crate::utils;
+
 pub struct Sequential {
     pub layers: Vec<Box<dyn Layer>>,
     loss: Box<dyn Loss>,
@@ -121,14 +123,34 @@ impl Sequential {
 
                 let train_predictions = self.predict_tensor(&dataset.get_tensor(RowType::Train, ColumnType::Feature));
                 let train_true_values = &dataset.get_tensor(RowType::Train, ColumnType::Target);
-                let train_err = (&train_predictions - train_true_values).map(|x| x*x).get_mean(0).get_mean(1).data[0];
-                println!("Train error: {}", train_err);
+                let train_loss = self.loss.compute_loss(train_true_values, &train_predictions);
+                println!("Train error: {}", train_loss);
 
                 if dataset.count_row_type(&RowType::Test) > 0 {
                     let test_predictions = self.predict_tensor(&dataset.get_tensor(RowType::Test, ColumnType::Feature));
                     let test_true_values = &dataset.get_tensor(RowType::Test, ColumnType::Target);
-                    let test_err = (&test_predictions - test_true_values).map(|x| x*x).get_mean(0).get_mean(1).data[0];
-                    println!("Test error: {}", test_err);
+                    assert_eq!(test_predictions.shape, test_true_values.shape, "Something wrong happened... o_O");
+                    let test_loss = self.loss.compute_loss(test_true_values, &test_predictions);
+                    println!("Test error: {}", test_loss);
+
+                    for metric in &self.metrics {
+                        match metric {
+                            Metrics::Accuracy => {
+                                // TODO: refactor (accuracy is not the same for classification or regression)
+                                let predictions_categories = utils::one_hot_encoded_tensor_to_indices(&test_predictions);
+                                let true_values_categories = utils::one_hot_encoded_tensor_to_indices(&test_true_values);
+                                let mut correct_preds = 0;
+                                for index in 0..predictions_categories.len() {
+                                    if predictions_categories[index] == true_values_categories[index] {
+                                        correct_preds += 1;
+                                    }
+                                }
+                                let accuracy = correct_preds as f64 / predictions_categories.len() as f64 * 100.0;
+
+                                println!("Accuracy : {:.2}%", accuracy);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -148,20 +170,19 @@ impl Sequential {
         layer_activations.insert(0, x_batch.clone());
 
         // Compute the loss and the initial gradient
-        let loss = (layer_activations.last().unwrap() - y_batch).map(|x| x*x).get_mean(0);
-        // println!("{:?} - {:?})^2 = {:?}", layer_activations.last().unwrap(), y_batch, loss);
-        let mut loss_grad = layer_activations.last().unwrap() - y_batch;
+        // let loss = (layer_activations.last().unwrap() - y_batch).map(|x| x*x).get_mean(0);
+        let loss = self.loss.compute_loss(y_batch, layer_activations.last().unwrap());
+        let mut loss_grad = self.loss.compute_loss_grad(y_batch, layer_activations.last().unwrap());
         
         // Propagate gradients through the network
         // Reverse propogation as this is backprop
         for (i, layer) in self.layers.iter_mut().skip(0).rev().enumerate() {
             let i = layer_activations.len() - 2 - i;
             loss_grad = layer.backward(&layer_activations[i], loss_grad);
-            // println!("Loss grad {} {}\n=====\n\n", i, loss_grad);
         }
         
         // loss
-        loss.get_mean(1).data[0]
+        loss
     }
 
     pub fn predict(&mut self, input: &Vec<f64>) -> Tensor {

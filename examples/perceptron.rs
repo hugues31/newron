@@ -19,7 +19,7 @@ fn main() {
     model.add(ReLU);
 
     model.add(Dense::new(8, 1));
-    model.add(Softmax);
+    model.add(ReLU);
 
     model.fit(&dataset, 42, true);
 
