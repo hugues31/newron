@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use newron::dataset::Dataset;
-use newron::layers::{dense::Dense, relu::ReLU};
+use newron::layers::{dense::Dense, relu::ReLU, softmax::Softmax};
 use newron::loss::{categorical_entropy::CategoricalEntropy, loss::Loss};
 use newron::metrics::Metrics;
 use newron::sequential::Sequential;
@@ -22,7 +22,7 @@ fn main() {
     model.add(Dense::new(dataset.get_number_features(), 9));
     model.add(ReLU);
     model.add(Dense::new(9, dataset.get_number_targets()));
-    model.add(ReLU);
+    model.add(Softmax);
 
     model.summary();
 

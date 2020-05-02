@@ -184,7 +184,7 @@ impl Tensor {
 
     /// Get 2d positioned value
     // 'data' is a flat array of f64
-    fn get_value(&self, x: usize, y: usize) -> f64 {
+    pub fn get_value(&self, x: usize, y: usize) -> f64 {
         self.data[x * &self.shape[1] + y]
     }
 
