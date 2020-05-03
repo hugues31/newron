@@ -19,7 +19,7 @@ fn main() {
     let mut model = Sequential::new();
 
     model.add(Dense::new(3, 8));
-    model.add(ReLU);
+    model.add(Tanh);
 
     model.add(Dense::new(8, 1));
     model.add(ReLU);
