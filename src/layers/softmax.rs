@@ -4,6 +4,10 @@ use crate::tensor::Tensor;
 pub struct Softmax;
 
 impl Layer for Softmax {
+    fn get_info(&self) -> String {
+        format!("Softmax Layer")
+    }
+
     fn forward(&self, input: &Tensor) -> Tensor {
         // we use stable softmax instead of classic softmax
         // for computational stability

@@ -107,7 +107,7 @@ impl Sequential {
         // output_unit_l == input_unit_l+1, output_unit_l_n = y_train.len()) and display message here
         
         // auto batch size : TODO improve it
-        let batch_size = cmp::min(dataset.get_row_count(), 64);
+        let batch_size = cmp::min(dataset.get_row_count(), 1);
 
         for epoch in 0..epochs {
             let batches = self.get_batches(dataset, batch_size, true);
@@ -116,6 +116,7 @@ impl Sequential {
                 let x_batch = &batch.0;
                 let y_batch = &batch.1;
                 let _loss = self.step(x_batch, y_batch);
+                // println!("Fin step. (loss {})", _loss);
             }
 
             if verbose {
@@ -170,7 +171,7 @@ impl Sequential {
         layer_activations.insert(0, x_batch.clone());
 
         // Compute the loss and the initial gradient
-        // let loss = (layer_activations.last().unwrap() - y_batch).map(|x| x*x).get_mean(0);
+        
         let loss = self.loss.compute_loss(y_batch, layer_activations.last().unwrap());
         let mut loss_grad = self.loss.compute_loss_grad(y_batch, layer_activations.last().unwrap());
         
