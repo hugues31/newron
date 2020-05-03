@@ -447,6 +447,28 @@ impl Mul<Tensor> for f64 {
     }
 }
 
+impl<'a> Mul<&'a Tensor> for f64 {
+    type Output = Tensor;
+
+    fn mul(self, other: &'a Tensor) -> Tensor {
+        Tensor {
+            data: other.data.iter().map(|a| a * self).collect(),
+            shape: other.shape.to_vec(),
+        }
+    }
+}
+
+impl<'a> Mul<f64> for &'a Tensor {
+    type Output = Tensor;
+
+    fn mul(self, other: f64) -> Tensor {
+        Tensor {
+            data: self.data.iter().map(|a| a * other).collect(),
+            shape: self.shape.to_vec(),
+        }
+    }
+}
+
 impl Mul<f32> for Tensor {
     type Output = Tensor;
 

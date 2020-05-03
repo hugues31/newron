@@ -11,7 +11,7 @@ impl Dense {
         // initialize with random values following special normal distribution
         // allowing theoritical faster convergence (Xavier Initialization)
         Dense {
-            weights: Tensor::random_normal(vec![input_units, output_units], 0.0, 2.0 / (input_units + output_units) as f64,42),
+            weights: Tensor::random_normal(vec![input_units, output_units], 0.0, 2.0 / (input_units + output_units) as f64,input_units as u32),
             biases: Tensor::one(vec![1, output_units])
         }
     }

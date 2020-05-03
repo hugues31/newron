@@ -2,7 +2,7 @@ use std::path::Path;
 
 use newron::dataset::Dataset;
 use newron::layers::{dense::Dense, relu::ReLU, softmax::Softmax};
-use newron::loss::{categorical_entropy::CategoricalEntropy, loss::Loss};
+use newron::loss::{categorical_entropy::CategoricalEntropy};
 use newron::metrics::Metrics;
 use newron::sequential::Sequential;
 use newron::optimizers::optimizer::Optimizer;
