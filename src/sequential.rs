@@ -4,10 +4,15 @@ use std::cmp;
 use crate::layers::layer::Layer;
 use crate::tensor::Tensor;
 use crate::dataset::{Dataset, RowType, ColumnType};
-use crate::random::Rand;
+use crate::{loss::loss::Loss, random::Rand, optimizers::optimizer::Optimizer, metrics::Metrics};
+use crate::loss::categorical_entropy::CategoricalEntropy;
+use crate::utils;
 
 pub struct Sequential {
     pub layers: Vec<Box<dyn Layer>>,
+    loss: Box<dyn Loss>,
+    optim: Optimizer,
+    metrics: Vec<Metrics>,
     seed: u32,
 }
 
@@ -16,6 +21,9 @@ impl Sequential {
     pub fn new() -> Sequential {
         Sequential {
             layers: vec![],
+            loss: Box::new(CategoricalEntropy{}),
+            optim: Optimizer::SGD,
+            metrics: vec![],
             seed: 0,
         }
     }
@@ -28,6 +36,19 @@ impl Sequential {
     /// Add a layer to the model
     pub fn add<T: 'static +  Layer>(&mut self, layer: T) {
         self.layers.push(Box::new(layer));
+    }
+
+    /// Get a summary of the model
+    pub fn summary(&self) {
+        // TODO: add more infos
+        println!("Sequential model using {} layers.", self.layers.len());
+    }
+
+    pub fn compile<T: 'static + Loss>(&mut self, loss: T, optim: Optimizer, metrics: Vec<Metrics>) {
+        // Set options
+        self.loss = Box::new(loss);
+        self.optim = optim;
+        self.metrics = metrics;
     }
 
     // Return the list of layer outputs given an input
@@ -86,7 +107,7 @@ impl Sequential {
         // output_unit_l == input_unit_l+1, output_unit_l_n = y_train.len()) and display message here
         
         // auto batch size : TODO improve it
-        let batch_size = cmp::min(dataset.get_row_count(), 64);
+        let batch_size = cmp::min(dataset.get_row_count(), 1);
 
         for epoch in 0..epochs {
             let batches = self.get_batches(dataset, batch_size, true);
@@ -95,6 +116,7 @@ impl Sequential {
                 let x_batch = &batch.0;
                 let y_batch = &batch.1;
                 let _loss = self.step(x_batch, y_batch);
+                // println!("Fin step. (loss {})", _loss);
             }
 
             if verbose {
@@ -102,14 +124,34 @@ impl Sequential {
 
                 let train_predictions = self.predict_tensor(&dataset.get_tensor(RowType::Train, ColumnType::Feature));
                 let train_true_values = &dataset.get_tensor(RowType::Train, ColumnType::Target);
-                let train_err = (&train_predictions - train_true_values).map(|x| x*x).get_mean(0).get_mean(1).data[0];
-                println!("Train error: {}", train_err);
+                let train_loss = self.loss.compute_loss(train_true_values, &train_predictions);
+                println!("Train error: {}", train_loss);
 
                 if dataset.count_row_type(&RowType::Test) > 0 {
                     let test_predictions = self.predict_tensor(&dataset.get_tensor(RowType::Test, ColumnType::Feature));
                     let test_true_values = &dataset.get_tensor(RowType::Test, ColumnType::Target);
-                    let test_err = (&test_predictions - test_true_values).map(|x| x*x).get_mean(0).get_mean(1).data[0];
-                    println!("Test error: {}", test_err);
+                    assert_eq!(test_predictions.shape, test_true_values.shape, "Something wrong happened... o_O");
+                    let test_loss = self.loss.compute_loss(test_true_values, &test_predictions);
+                    println!("Test error: {}", test_loss);
+
+                    for metric in &self.metrics {
+                        match metric {
+                            Metrics::Accuracy => {
+                                // TODO: refactor (accuracy is not the same for classification or regression)
+                                let predictions_categories = utils::one_hot_encoded_tensor_to_indices(&test_predictions);
+                                let true_values_categories = utils::one_hot_encoded_tensor_to_indices(&test_true_values);
+                                let mut correct_preds = 0;
+                                for index in 0..predictions_categories.len() {
+                                    if predictions_categories[index] == true_values_categories[index] {
+                                        correct_preds += 1;
+                                    }
+                                }
+                                let accuracy = correct_preds as f64 / predictions_categories.len() as f64 * 100.0;
+
+                                println!("Accuracy : {:.2}%", accuracy);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -129,20 +171,19 @@ impl Sequential {
         layer_activations.insert(0, x_batch.clone());
 
         // Compute the loss and the initial gradient
-        let loss = (layer_activations.last().unwrap() - y_batch).map(|x| x*x).get_mean(0);
-        // println!("{:?} - {:?})^2 = {:?}", layer_activations.last().unwrap(), y_batch, loss);
-        let mut loss_grad = layer_activations.last().unwrap() - y_batch;
+        
+        let loss = self.loss.compute_loss(y_batch, layer_activations.last().unwrap());
+        let mut loss_grad = self.loss.compute_loss_grad(y_batch, layer_activations.last().unwrap());
         
         // Propagate gradients through the network
         // Reverse propogation as this is backprop
         for (i, layer) in self.layers.iter_mut().skip(0).rev().enumerate() {
             let i = layer_activations.len() - 2 - i;
             loss_grad = layer.backward(&layer_activations[i], loss_grad);
-            println!("Loss grad {} {}\n=====\n\n", i, loss_grad);
         }
         
         // loss
-        loss.get_mean(1).data[0]
+        loss
     }
 
     pub fn predict(&mut self, input: &Vec<f64>) -> Tensor {

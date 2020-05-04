@@ -1,4 +1,5 @@
 // Some utility functions
+use crate::tensor::Tensor;
 
 // Invert integer
 pub(crate) fn swap_endian(val: u32) -> u32 {
@@ -22,5 +23,40 @@ pub(crate) fn to_vec_f64(data: &Vec<u8>) -> Vec<f64> {
     for el in data {
         result.push(*el as f64);
     }
+    result
+}
+
+// Return a rounded version of the vector `data` to
+// the number of `decimal_places` specified
+pub fn round_vector(data: Vec<f64>, decimal_places: usize) -> Vec<f64> {
+    data.iter().map(|x| round_f64(*x, decimal_places)).collect()
+}
+
+pub fn round_f64(value: f64, decimal_places: usize) -> f64 {
+    let decimal_places = 10.0f64.powf(decimal_places as f64);
+    (value * decimal_places).round() / decimal_places
+}
+
+// Return a list of indices of the maximum value found for each row of the tensor `data`
+// (similar to argmax in numpy)
+pub(crate) fn one_hot_encoded_tensor_to_indices(data: &Tensor) -> Vec<usize> {
+    let rows = data.shape[0];
+    let cols = data.shape[1];
+
+    let mut result = Vec::new();
+
+    for row in 0..rows {
+        let mut maximum = data.get_value(row, 0);
+        let mut indice = 0;
+        for col in 1..cols {
+            let value = data.get_value(row, col);
+            if value > maximum {
+                maximum = value;
+                indice = col;
+            }
+        }
+        result.push(indice);
+    }
+
     result
 }

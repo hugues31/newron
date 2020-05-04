@@ -4,7 +4,7 @@ use crate::random::Rand;
 
 use std::cmp;
 use std::fmt;
-use std::ops::{Add, Index, Mul, Sub, SubAssign};
+use std::ops::{Add, Index, Mul, Sub, SubAssign, Div};
 use std::f64::consts::PI;
 
 #[derive(Clone)]
@@ -97,6 +97,7 @@ impl Tensor {
     /// Compute the mean of the matrix along the `axis` specified.
     /// 0 = along the column, 1 = along the row
     pub fn get_mean(&self, axis: usize) -> Tensor {
+        // TODO: refactor with same logic as get_max (or better!)
         let mut data = Vec::new();
 
         let other_axis = if axis == 1 { 0 } else { 1 };
@@ -121,9 +122,69 @@ impl Tensor {
         Tensor::new(data, shape)
     }
 
+    /// Get the Tensor containing max values along the `axis` specified
+    /// 0 = along the column, 1 = along the row
+    pub fn get_max(&self, axis: usize) -> Tensor {
+        let mut data = Vec::new();
+
+        if axis == 0 {
+            for row in 0..self.shape[1] {
+                let mut max = self.get_value(0, row);
+                for col in 0..self.shape[axis] {
+                    let val = self.get_value(col, row);
+                    if val > max {
+                        max = val;
+                    }
+                }
+                data.push(max);
+            }
+        } else {
+            for col in 0..self.shape[0] {
+                let mut max = self.get_value(col, 0);
+                for row in 0..self.shape[axis] {
+                    let val = self.get_value(col, row);
+                    if val > max {
+                        max = val;
+                    }
+                }
+                data.push(max);
+            }
+        }
+
+        let shape = if axis == 0 {vec![1, data.len()]} else {vec![data.len(), 1]};
+        Tensor::new(data, shape)
+    }
+
+    /// Get the Tensor containing the sum of all values along the `axis` specified
+    /// 0 = along the column, 1 = along the row
+    pub fn get_sum(&self, axis: usize) -> Tensor {
+        let mut data = Vec::new();
+
+        if axis == 0 {
+            for row in 0..self.shape[1] {
+                let mut sum = 0.0;
+                for col in 0..self.shape[axis] {
+                    sum += self.get_value(col, row);
+                }
+                data.push(sum);
+            }
+        } else {
+            for col in 0..self.shape[0] {
+                let mut sum = 0.0;
+                for row in 0..self.shape[axis] {
+                    sum += self.get_value(col, row);
+                }
+                data.push(sum);
+            }
+        }
+
+        let shape = if axis == 0 {vec![1, data.len()]} else {vec![data.len(), 1]};
+        Tensor::new(data, shape)
+    }
+
     /// Get 2d positioned value
     // 'data' is a flat array of f64
-    fn get_value(&self, x: usize, y: usize) -> f64 {
+    pub fn get_value(&self, x: usize, y: usize) -> f64 {
         self.data[x * &self.shape[1] + y]
     }
 
@@ -154,6 +215,35 @@ impl Tensor {
     pub fn map(&self, f: fn(f64) -> f64) -> Tensor {
         Tensor {
             data: self.data.to_vec().into_iter().map(f).collect(),
+            shape: self.shape.to_vec(),
+        }
+    }
+
+    /// Normalize each row of the Tensor (using row = value - max(row))
+    pub fn normalize_rows(&self) -> Tensor {
+        let mut data = Vec::new();
+
+        let mut max_for_each_rows = Vec::with_capacity(self.shape[0]);
+
+        for row in 0..self.shape[0] {
+            let mut max = self.get_value(row, 0);
+            for col in 0..self.shape[1] {               
+                let val = self.get_value(row, col);
+                if val > max {
+                    max = val;
+                }
+            }
+            max_for_each_rows.push(max);
+        }
+
+        for row in 0..self.shape[0] {
+            for col in 0..self.shape[1] {
+                data.push(self.get_value(row, col) - max_for_each_rows[row]);
+            }
+        }
+
+        Tensor {
+            data,
             shape: self.shape.to_vec(),
         }
     }
@@ -357,6 +447,28 @@ impl Mul<Tensor> for f64 {
     }
 }
 
+impl<'a> Mul<&'a Tensor> for f64 {
+    type Output = Tensor;
+
+    fn mul(self, other: &'a Tensor) -> Tensor {
+        Tensor {
+            data: other.data.iter().map(|a| a * self).collect(),
+            shape: other.shape.to_vec(),
+        }
+    }
+}
+
+impl<'a> Mul<f64> for &'a Tensor {
+    type Output = Tensor;
+
+    fn mul(self, other: f64) -> Tensor {
+        Tensor {
+            data: self.data.iter().map(|a| a * other).collect(),
+            shape: self.shape.to_vec(),
+        }
+    }
+}
+
 impl Mul<f32> for Tensor {
     type Output = Tensor;
 
@@ -384,6 +496,53 @@ impl Mul<Tensor> for Tensor {
 
     fn mul(self, other: Tensor) -> Tensor {
         &self * &other
+    }
+}
+
+impl Div<Tensor> for Tensor {
+    type Output = Tensor;
+
+    fn div(self, other: Tensor) -> Tensor {
+        &self / &other
+    }
+}
+
+impl<'a, 'b> Div<&'b Tensor> for &'a Tensor {
+    type Output = Tensor;
+
+    fn div(self, other: &'b Tensor) -> Tensor {
+        // We divide elementwise if the shape are the same
+        if self.shape == other.shape {
+            let data = self
+            .data
+            .iter()
+            .zip(other.data.iter())
+            .map(|(a, b)| a / b)
+            .collect();
+
+            let shape = self.shape.to_vec();
+
+            return Tensor { data, shape };
+        // if self and other have same number of rows and other
+        // is 1 dimension
+        } else if self.shape[0] == other.shape[0] && other.shape[1] == 1 {
+            let mut data = Vec::new();
+
+            for row in 0..self.shape[0] {
+                for col in 0..self.shape[1] {
+                    let val = self.get_value(row, col) / other.data[row];
+                    data.push(val);
+                }
+            }
+
+            let shape = self.shape.to_vec();
+
+            return  Tensor { data, shape };
+        }
+        else {
+            unimplemented!();
+        }
+
     }
 }
 
@@ -428,8 +587,8 @@ impl fmt::Display for Tensor {
                 write!(f, "[{}]", result)
             }
             2 => {
-                // maximum of 4 decimals are shown
-                let decimals = 4;
+                // maximum of 8 digits are shown
+                let decimals = 8;
                 let mut result = String::from("\n");
                 for row in 0..self.shape[0] {
                     result += "|";

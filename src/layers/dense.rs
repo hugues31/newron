@@ -11,20 +11,24 @@ impl Dense {
         // initialize with random values following special normal distribution
         // allowing theoritical faster convergence (Xavier Initialization)
         Dense {
-            weights: Tensor::random_normal(vec![input_units, output_units], 0.0, 2.0 / (input_units + output_units) as f64,42),
+            weights: Tensor::random_normal(vec![input_units, output_units], 0.0, 2.0 / (input_units + output_units) as f64,output_units as u32),
             biases: Tensor::one(vec![1, output_units])
         }
     }
 }
 
 impl Layer for Dense {
+    fn get_info(&self) -> String {
+        format!("Weights {}\nBiases {}", self.weights, self.biases)
+    }
+
     fn forward(&self, input: &Tensor) -> Tensor {
         // Perform an affine transformation:
         // f(x) = <W*x> + b
         
         // input shape: [batch, input_units]
         // output shape: [batch, output units]
-
+        // println!("Forward Dense {}", &input.dot(&self.weights) + &self.biases);
         &input.dot(&self.weights) + &self.biases
     }
 
@@ -41,12 +45,11 @@ impl Layer for Dense {
         assert_eq!(grad_weights.shape, self.weights.shape, "Wrong shape for weight gradients.");
         assert_eq!(grad_biases.shape, self.biases.shape, "Wrong shape for biases gradients.");
 
-        let alpha = 0.1;
+        let alpha = 0.002;
 
-        // println!("ancien poids {:?}", self.weights);
         self.weights -= alpha * grad_weights;
         self.biases -= alpha * grad_biases;
-        // println!("nouveau poids {:?}", self.weights);
+
         grad_input
     }
 }

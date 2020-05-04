@@ -17,12 +17,7 @@ Please see the [docs](https://docs.rs/newron/) or review [examples](https://gith
 
 | Feature                                                                             | Progress | Comment |
 |-------------------------------------------------------------------------------------|----------|---------|
-| Be able to NOT use activation function                                              |⬤⬤◯◯◯|         |
-| Softmax for classification task                                                     |⬤◯◯◯◯|         |
-| SGD with batch gradient descent                                                     |◯◯◯◯◯|         |
-| Dataset structure to load CSV,...                                                   |◯◯◯◯◯|         |
-| Improve metrics (loss, precision for train&test)                                    |◯◯◯◯◯|         |
-| Load [MNIST fashion dataset](https://github.com/zalandoresearch/fashion-mnist)      |◯◯◯◯◯|         |
+| Improve metrics (confusion matrix struct and method to compute accuracy, recall..)  |◯◯◯◯◯|         |
 | Implement Convolutional Layer                                                       |◯◯◯◯◯|         |
 | Implement RNN Layer                                                                 |◯◯◯◯◯|         |
 | Webapp to monitor training phase                                                    |◯◯◯◯◯|         |
