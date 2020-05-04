@@ -39,7 +39,7 @@ fn main() {
     let prediction = model.predict(&vec![value_to_predict]).get_value(0, 0);
     let true_value = 0.2 * value_to_predict + 2.0;
     println!(
-        "Prediction for X={} -> Y={} (true value={})",
+        "Prediction for X={} -> Y={:.4} (true value={:.4})",
         &value_to_predict, &prediction, &true_value
     );
 }

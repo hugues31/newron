@@ -3,7 +3,7 @@ use std::fmt;
 
 pub trait Layer {
     fn forward(&self, input: &Tensor) -> Tensor;
-    fn backward(&mut self, input: &Tensor, grad_output: Tensor) -> Tensor;
+    fn backward(&mut self, input: &Tensor, grad_output: &Tensor) -> Tensor;
     fn get_info(&self) -> String;
 }
 

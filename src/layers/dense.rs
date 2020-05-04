@@ -32,13 +32,13 @@ impl Layer for Dense {
         &input.dot(&self.weights) + &self.biases
     }
 
-    fn backward(&mut self, input: &Tensor, grad_output: Tensor) -> Tensor {
+    fn backward(&mut self, input: &Tensor, grad_output: &Tensor) -> Tensor {
         // compute d f / d x = d f / d dense * d dense / d x
         // where d dense/ d x = weights transposed
-        let grad_input = &grad_output * &self.weights.get_transpose();
+        let grad_input = grad_output * &self.weights.get_transpose();
         
         // compute gradient w.r.t. weights and biases
-        let grad_weights = &input.get_transpose() * &grad_output;
+        let grad_weights = &input.get_transpose() * grad_output;
         let input_rows = input.shape[0] as f64;
 
         let grad_biases = input_rows * grad_output.get_mean(0);

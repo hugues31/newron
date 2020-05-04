@@ -12,9 +12,8 @@ impl Layer for Tanh {
         input.map(|x| Tanh::tanh(x))
     }
 
-    fn backward(&mut self, input: &Tensor, grad_output: Tensor) -> Tensor {
+    fn backward(&mut self, input: &Tensor, grad_output: &Tensor) -> Tensor {
         let tanh_grad = input.map(|x| Tanh::tanh_prime(x));
-        println!("grad tanh: \n{}", grad_output.mult_el(&tanh_grad));
         grad_output.mult_el(&tanh_grad)
     }
 }

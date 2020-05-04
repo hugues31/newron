@@ -107,16 +107,16 @@ impl Sequential {
         // output_unit_l == input_unit_l+1, output_unit_l_n = y_train.len()) and display message here
         
         // auto batch size : TODO improve it
-        let batch_size = cmp::min(dataset.get_row_count(), 1);
-
+        let batch_size = cmp::min(dataset.get_row_count(), 32);
+        
         for epoch in 0..epochs {
             let batches = self.get_batches(dataset, batch_size, true);
 
             for batch in &batches {
                 let x_batch = &batch.0;
                 let y_batch = &batch.1;
-                let _loss = self.step(x_batch, y_batch);
-                // println!("Fin step. (loss {})", _loss);
+                
+                self.step(x_batch, y_batch);
             }
 
             if verbose {
@@ -159,31 +159,53 @@ impl Sequential {
 
 
     /// Train the network and return the loss
-    pub fn step(&mut self, x_batch: &Tensor, y_batch: &Tensor) -> f64 {
+    pub fn step(&mut self, x_batch: &Tensor, y_batch: &Tensor) {
         // Train our network on a given batch of x_batch and y_batch.
         // Size of the batch = # rows of x_batch = # rows of y_batch
         // We first need to run forward to get all layer activations.
         // Then we can run layer.backward going from last to first layer.
-        // After we have called backward for all layers, all Dense layers have already made one gradient step.
 
         // Get the layer activations
         let mut layer_activations = self.forward_propagation(x_batch, true);
         layer_activations.insert(0, x_batch.clone());
+        
+        let size_batch = y_batch.shape[0];
 
-        // Compute the loss and the initial gradient
-        
-        let loss = self.loss.compute_loss(y_batch, layer_activations.last().unwrap());
-        let mut loss_grad = self.loss.compute_loss_grad(y_batch, layer_activations.last().unwrap());
-        
-        // Propagate gradients through the network
-        // Reverse propogation as this is backprop
+        let mut loss_gradient = Tensor::new(vec![], vec![0, y_batch.shape[1]]);
+        // compute loss and average loss gradient
+        for observation in 0..size_batch {
+            let y_sample = y_batch.get_row(observation);
+
+            // Compute the loss
+            let loss = self.loss.compute_loss(&y_sample, layer_activations.last().unwrap());
+
+            // Compute the loss gradient
+            let loss_grad = self.loss.compute_loss_grad(&y_sample, layer_activations.last().unwrap());
+            loss_gradient.add_row(loss_grad.data);
+
+        }
+
+        let average_loss_gradient =  loss_gradient.get_mean(0);
+        let mut gradient = average_loss_gradient;
+
+        // Propagate gradients through the network layers (backpropagation)
         for (i, layer) in self.layers.iter_mut().skip(0).rev().enumerate() {
             let i = layer_activations.len() - 2 - i;
-            loss_grad = layer.backward(&layer_activations[i], loss_grad);
+                        
+            // compute gradients (accumulation since we use mini batch gradient descent)
+            let mut acc_gradient = Tensor::new(vec![], vec![0 , layer_activations[i].shape[1]]);
+
+            for observation in 0..size_batch {
+                let activation = &layer_activations[i].get_row(observation);
+                let gradient_temp = layer.backward(&activation, &gradient);
+                acc_gradient.add_row(gradient_temp.data);
+            }
+
+            gradient = acc_gradient.get_mean(0);
+            // Update weights based on the average gradient
+            
         }
-        
-        // loss
-        loss
+
     }
 
     pub fn predict(&mut self, input: &Vec<f64>) -> Tensor {

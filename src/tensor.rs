@@ -210,6 +210,14 @@ impl Tensor {
         }
     }
 
+    pub fn add_row(&mut self, row: Vec<f64>) {
+        // increment row count
+        self.shape[0] += 1;
+
+        // add data
+        self.data.extend(row);
+    }
+
     /// Creates a new Tensor where the function `f` is applied
     /// element-wise. Does not change the shape of tensor.
     pub fn map(&self, f: fn(f64) -> f64) -> Tensor {

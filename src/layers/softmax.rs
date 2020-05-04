@@ -18,9 +18,7 @@ impl Layer for Softmax {
         numerator / denominator
     }
 
-    fn backward(&mut self, input: &Tensor, grad_output: Tensor) -> Tensor {
-        // https://themaverickmeerkat.com/2019-10-23-Softmax/
-        // https://medium.com/@aerinykim/how-to-implement-the-softmax-derivative-independently-from-any-loss-function-ae6d44363a9d
+    fn backward(&mut self, input: &Tensor, grad_output: &Tensor) -> Tensor {
         let m = input.shape[0];
         let n = input.shape[1];
         let p = self.forward(input);

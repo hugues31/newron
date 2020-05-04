@@ -19,9 +19,9 @@ fn main() {
     println!("{:?}", dataset);
 
     let mut model = Sequential::new();
-    model.add(Dense::new(dataset.get_number_features(), 40));
+    model.add(Dense::new(dataset.get_number_features(), 100));
     model.add(ReLU);
-    model.add(Dense::new(40, dataset.get_number_targets()));
+    model.add(Dense::new(100, dataset.get_number_targets()));
     model.add(Softmax);
 
     model.summary();
