@@ -9,20 +9,17 @@ impl Layer for Tanh {
     }
 
     fn forward(&self, input: &Tensor) -> Tensor {
-        input.map(|x| Activation::tanh(x))
+        input.map(|x| Tanh::tanh(x))
     }
 
     fn backward(&mut self, input: &Tensor, grad_output: Tensor) -> Tensor {
-        let tanh_grad = input.map(|x| Activation::tanh_prime(x));
+        let tanh_grad = input.map(|x| Tanh::tanh_prime(x));
         println!("grad tanh: \n{}", grad_output.mult_el(&tanh_grad));
         grad_output.mult_el(&tanh_grad)
     }
 }
 
-struct Activation;
-
-impl Activation {
-
+impl Tanh {
     fn tanh(x: f64) -> f64 {
         (2.0 / (1.0 + (-2.0 * x).exp())) - 1.0
     }
@@ -30,5 +27,4 @@ impl Activation {
     fn tanh_prime(x: f64) -> f64 {
         1.0 - Self::tanh(x).powi(2)
     }
-
 }
