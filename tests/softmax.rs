@@ -37,13 +37,17 @@ mod softmax_tests {
         // Test 3 dimensions (batch = 3 samples)
         let input = Tensor::new(vec![1.0, 2.0, 3.0,
                                      2.0, 4.0, 2.0,
-                                     -3.0, 2.0, 0.0], vec![3, 3]);
+                                     -3.0, 2.0, 0.0,
+                                     2.0, 4.0, 2.0], vec![4, 3]);
 
-        let backward = layer.backward(&input, &layer.forward(&input));
+        let previous_grad = Tensor::new(vec![1.0, 2.0, 0.0], vec![1, 3]);
 
-        let result = Tensor::new(vec![-0.038, -0.065, 0.103,
-                                     -0.057, 0.114, -0.057,
-                                     -0.005, 0.083, -0.078], vec![3, 3]);
+        let backward = layer.backward(&input, &previous_grad);
+
+        let result = Tensor::new(vec![0.038, 0.348, -0.385,
+                                                   -0.072, 0.251, -0.179,
+                                                   -0.004, 0.213, -0.208,
+                                                   -0.072, 0.251, -0.179], vec![4, 3]);
 
         assert_eq!(utils::round_vector(backward.data, 3), result.data);
     }

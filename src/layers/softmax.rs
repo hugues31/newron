@@ -53,18 +53,18 @@ impl Layer for Softmax {
         for observations in 0..m {
             d_softmax.push(&tensor2[observations] - &tensor1[observations]);
         }
-
+        
         let mut data = Vec::new();
         for observation in 0..m {
             for col in 0..n {
                 let mut acc = 0.0;
                 for col_iter in 0..n {
-                    acc += d_softmax[observation].get_value(col, col_iter) * grad_output.get_value(observation, col_iter);
+                    acc += d_softmax[observation].get_value(col, col_iter) * grad_output.get_value(0, col_iter);
                 }
                 data.push(acc);
             }  
         }
-
+        
         Tensor {
             data,
             shape: grad_output.shape.to_vec()

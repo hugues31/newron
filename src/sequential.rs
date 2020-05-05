@@ -107,7 +107,7 @@ impl Sequential {
         // output_unit_l == input_unit_l+1, output_unit_l_n = y_train.len()) and display message here
         
         // auto batch size : TODO improve it
-        let batch_size = cmp::min(dataset.get_row_count(), 32);
+        let batch_size = cmp::min(dataset.get_row_count(), 8);
         
         for epoch in 0..epochs {
             let batches = self.get_batches(dataset, batch_size, true);
@@ -171,39 +171,22 @@ impl Sequential {
         
         let size_batch = y_batch.shape[0];
 
-        let mut loss_gradient = Tensor::new(vec![], vec![0, y_batch.shape[1]]);
         // compute loss and average loss gradient
-        for observation in 0..size_batch {
-            let y_sample = y_batch.get_row(observation);
 
-            // Compute the loss             
-            let loss = self.loss.compute_loss(&y_sample, &layer_activations.last().unwrap().get_row(observation));
+        let loss = self.loss.compute_loss(&y_batch, &layer_activations.last().unwrap());
 
-            // Compute the loss gradient
-            let loss_grad = self.loss.compute_loss_grad(&y_sample, &layer_activations.last().unwrap().get_row(observation));
-            loss_gradient.add_row(loss_grad.data);
-
-        }
-
-        let average_loss_gradient =  loss_gradient.get_mean(0);
-        let mut gradient = average_loss_gradient;
+        // Compute the loss gradient
+        let loss_grad = self.loss.compute_loss_grad(&y_batch, &layer_activations.last().unwrap());
+        
+        let mut gradient = loss_grad;
 
         // Propagate gradients through the network layers (backpropagation)
         for (i, layer) in self.layers.iter_mut().skip(0).rev().enumerate() {
             let i = layer_activations.len() - 2 - i;
-                        
-            // compute gradients (accumulation since we use mini batch gradient descent)
-            let mut acc_gradient = Tensor::new(vec![], vec![0 , layer_activations[i].shape[1]]);
-
-            for observation in 0..size_batch {
-                let activation = &layer_activations[i].get_row(observation);
-                let gradient_temp = layer.backward(&activation, &gradient);
-                acc_gradient.add_row(gradient_temp.data);
-            }
-
-            gradient = acc_gradient.get_mean(0);
-            // Update weights based on the average gradient
+            // compute gradients (average them since we use mini batch gradient descent)
+            let activation = &layer_activations[i];
             
+            gradient = layer.backward(&activation, &gradient);
         }
 
     }
