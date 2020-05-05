@@ -14,7 +14,6 @@ impl Layer for ReLU {
 
     fn backward(&mut self, input: &Tensor, grad_output: Tensor) -> Tensor {
         let relu_grad = input.map(|x| if x > 0.0 { 1.0 } else { 0.0 });
-        println!("grad ReLU: \n{}", grad_output.mult_el(&relu_grad));
         grad_output.mult_el(&relu_grad)
     }
 }
