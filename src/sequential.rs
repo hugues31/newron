@@ -176,11 +176,11 @@ impl Sequential {
         for observation in 0..size_batch {
             let y_sample = y_batch.get_row(observation);
 
-            // Compute the loss
-            let loss = self.loss.compute_loss(&y_sample, layer_activations.last().unwrap());
+            // Compute the loss             
+            let loss = self.loss.compute_loss(&y_sample, &layer_activations.last().unwrap().get_row(observation));
 
             // Compute the loss gradient
-            let loss_grad = self.loss.compute_loss_grad(&y_sample, layer_activations.last().unwrap());
+            let loss_grad = self.loss.compute_loss_grad(&y_sample, &layer_activations.last().unwrap().get_row(observation));
             loss_gradient.add_row(loss_grad.data);
 
         }

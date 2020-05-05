@@ -39,7 +39,7 @@ mod softmax_tests {
                                      2.0, 4.0, 2.0,
                                      -3.0, 2.0, 0.0], vec![3, 3]);
 
-        let backward = layer.backward(&input, layer.forward(&input));
+        let backward = layer.backward(&input, &layer.forward(&input));
 
         let result = Tensor::new(vec![-0.038, -0.065, 0.103,
                                      -0.057, 0.114, -0.057,

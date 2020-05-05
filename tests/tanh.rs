@@ -26,7 +26,7 @@ mod softmax_tests {
         // Test 1 dimension (when batch = 1 sample for example)
         let input = Tensor::new(vec![0.0, 1.6, 1.0, 3.1], vec![1, 4]);
 
-        let backward = layer.backward(&input, layer.forward(&input));
+        let backward = layer.backward(&input, &layer.forward(&input));
         
         // ~ [ 0.  0.91715234  0.78071444  0.99627208] dot [0.0, 0.9, 0.8, 1.0]
         let result = Tensor::new(vec![0.0, 0.1, 0.3, 0.0], vec![1, 4]);

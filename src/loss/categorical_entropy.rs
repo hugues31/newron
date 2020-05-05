@@ -1,4 +1,4 @@
-use crate::{tensor::Tensor, loss::loss::Loss, utils};
+use crate::{tensor::Tensor, loss::loss::Loss, utils, layers::{layer::Layer, softmax::Softmax}};
 pub struct CategoricalEntropy {}
 
 impl Loss for CategoricalEntropy {
@@ -7,13 +7,16 @@ impl Loss for CategoricalEntropy {
 
         let indices = utils::one_hot_encoded_tensor_to_indices(y_true);
 
+        // Even if last layer is Softmax, we softmax-it again for numerical stability
+        let softmax = Softmax{};
+        let softmax_value = softmax.forward(y_pred);
+
         let mut p = Vec::new();
         for (row, indice) in indices.iter().enumerate() {
-            p.push(y_pred.get_value(row, *indice));
+            p.push(softmax_value.get_value(row, *indice));
         }
 
         let log_likelihood: Vec<f64> = p.iter().map(|x| -(x.ln())).collect();
-
         log_likelihood.iter().sum::<f64>() / m as f64
     }
 
@@ -23,12 +26,16 @@ impl Loss for CategoricalEntropy {
 
         let indices = utils::one_hot_encoded_tensor_to_indices(y_true);
 
+        // Even if last layer is Softmax, we softmax-it again for numerical stability
+        let softmax = Softmax{};
+        let softmax_value = softmax.forward(y_pred);
+
         let mut data: Vec<f64> = Vec::new();
 
         for row in 0..rows {
             for col in 0..cols {
                 let indice = indices[row];
-                let mut value = y_pred.get_value(row, col);
+                let mut value = softmax_value.get_value(row, col);
                 if col == indice { value -= 1.0 }
                 value /= rows as f64;
                 data.push(value);
