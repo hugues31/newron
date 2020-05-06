@@ -40,8 +40,8 @@ mod mse_tests {
 
         let loss_grad = loss.compute_loss_grad(&true_values, &predictions);
 
-        let result = -0.533;
+        let result = Tensor::new(vec![1.6, 0.6, -3.8], vec![1, 3]);
 
-        assert_eq!(utils::round_f64(loss_grad.data[0], 3), result);
+        assert_eq!(utils::round_vector(loss_grad.data, 3), result.data);
     }
 }

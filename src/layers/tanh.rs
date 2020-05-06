@@ -44,7 +44,7 @@ impl TanH {
         1.0 - Self::tanh(x).powi(2)
     }
 
-    pub(crate) fn new() -> TanH {
+    pub fn new() -> TanH {
         TanH {
             input: Tensor::new(vec![], vec![])
         }
