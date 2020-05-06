@@ -140,7 +140,7 @@ impl Sequential {
         // output_unit_l == input_unit_l+1, output_unit_l_n = y_train.len()) and display message here
         
         // auto batch size : TODO improve it
-        let batch_size = cmp::min(dataset.get_row_count(), 1);
+        let batch_size = cmp::min(dataset.get_row_count(), 16);
 
         for epoch in 0..epochs {
             let batches = self.get_batches(dataset, batch_size, true);
@@ -149,7 +149,7 @@ impl Sequential {
                 let x_batch = batch.0;
                 let y_batch = batch.1;
                 
-                self.step(x_batch, &y_batch);
+                self.train(x_batch, &y_batch);
             }
 
             if verbose {
@@ -192,7 +192,7 @@ impl Sequential {
 
 
     /// Train the network and return the loss
-    pub fn step(&mut self, x_batch: Tensor, y_batch: &Tensor) {
+    pub fn train(&mut self, x_batch: Tensor, y_batch: &Tensor) {
         // Train our network on a given batch of x_batch and y_batch.
         // Size of the batch = # rows of x_batch = # rows of y_batch
         // We first need to run forward to get all layer activations.
