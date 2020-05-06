@@ -23,7 +23,7 @@ fn main() {
     model.add(Dense{input_units: 1, output_units:1});
 
     model.compile(MSE{},
-        SGD::new(0.0000002),
+        SGD::new(0.02),
         vec![Metrics::Accuracy]);
 
     model.summary();
