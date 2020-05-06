@@ -209,13 +209,12 @@ impl Sequential {
         let loss = self.loss.compute_loss(&y_batch, &layer_activations.last().unwrap());
 
         // Compute the loss gradient
-
         let loss_grad = self.loss.compute_loss_grad(&y_batch, &layer_activations.last().unwrap());
 
         let mut gradient = loss_grad;
 
         // Propagate gradients through the network layers (backpropagation)
-        for (i, layer) in self.layers.iter_mut().rev().enumerate() {
+        for layer in self.layers.iter_mut().rev() {
             gradient = layer.backward(&gradient);
         }
 
