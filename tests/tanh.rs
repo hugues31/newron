@@ -1,18 +1,18 @@
 #[cfg(test)]
 mod softmax_tests {
     use newron::layers::layer::Layer;
-    use newron::layers::tanh::Tanh;
+    use newron::layers::tanh::TanH;
     use newron::tensor::Tensor;
     use newron::utils;
 
     #[test]
     fn test_tanh_forward() {
-        let layer = Tanh{};
+        let layer = TanH::;
 
         // Test 1 dimension (when batch = 1 sample for example)
         let input = Tensor::new(vec![0.0, 1.6, 1.0, 3.1], vec![1, 4]);
 
-        let forward = layer.forward(&input);
+        let forward = layer.forward(input);
 
         let result = Tensor::new(vec![ 0.0, 0.9, 0.8, 1.0], vec![1, 4]);
 
