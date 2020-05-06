@@ -1,11 +1,11 @@
 use std::path::Path;
 
 use newron::dataset::Dataset;
-use newron::layers::{dense::Dense, relu::ReLU, softmax::Softmax};
+use newron::layers::LayerEnum::*;
 use newron::loss::{categorical_entropy::CategoricalEntropy};
 use newron::metrics::Metrics;
 use newron::sequential::Sequential;
-use newron::optimizers::optimizer::Optimizer;
+use newron::optimizers::sgd::SGD;
 
 fn main() {
     // Path to a folder containing the 4 files :
@@ -19,16 +19,26 @@ fn main() {
     println!("{:?}", dataset);
 
     let mut model = Sequential::new();
-    model.add(Dense::new(dataset.get_number_features(), 100));
+
+    model.add(Dense {
+        input_units: dataset.get_number_features(),
+        output_units: 100
+    });
+    
     model.add(ReLU);
-    model.add(Dense::new(100, dataset.get_number_targets()));
+
+    model.add(Dense {
+        input_units: 100,
+        output_units: dataset.get_number_targets()
+    });
+
     model.add(Softmax);
 
-    model.summary();
-
     model.compile(CategoricalEntropy{},
-              Optimizer::SGD,
+              SGD::new(0.2),
               vec![Metrics::Accuracy]);
+
+    model.summary();
 
     model.fit(&dataset, 2_000, true);
 }

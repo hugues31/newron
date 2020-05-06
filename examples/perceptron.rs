@@ -1,9 +1,9 @@
 use newron::dataset::Dataset;
-use newron::layers::{dense::Dense, relu::ReLU};
+use newron::layers::LayerEnum::*;
 use newron::sequential::Sequential;
 use newron::loss::{mse::MSE};
 use newron::metrics::Metrics;
-use newron::optimizers::optimizer::Optimizer;
+use newron::optimizers::sgd::SGD;
 
 fn main() {
     // Let's create a toy dataset
@@ -18,19 +18,19 @@ fn main() {
 
     let mut model = Sequential::new();
 
-    model.add(Dense::new(3, 8));
+    model.add(Dense{input_units:3, output_units:8});
+    model.add(TanH);
+
+    model.add(Dense{input_units:8, output_units:1});
     model.add(ReLU);
 
-    model.add(Dense::new(8, 1));
-    model.add(ReLU);
+    model.compile(MSE{},
+        SGD::new(0.002),
+        vec![Metrics::Accuracy]);
 
     model.summary();
 
-    model.compile(MSE{},
-        Optimizer::SGD,
-        vec![Metrics::Accuracy]);
-
-    model.fit(&dataset, 3, true);
+    model.fit(&dataset, 1_000, true);
 
     let features_to_predict = vec![1.0, 0.0, 1.0];
     let prediction = model.predict(&features_to_predict);

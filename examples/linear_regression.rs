@@ -1,9 +1,9 @@
 use newron::dataset::Dataset;
-use newron::layers::{dense::Dense};
+use newron::layers::LayerEnum::*;
 use newron::sequential::Sequential;
 use newron::loss::{mse::MSE};
 use newron::metrics::Metrics;
-use newron::optimizers::optimizer::Optimizer;
+use newron::optimizers::sgd::SGD;
 
 fn main() {
     // Sample the function f(x) = 0.2x + 2
@@ -20,13 +20,13 @@ fn main() {
     let mut model = Sequential::new();
 
     // We only need one neuron (slope + intercept (bias))
-    model.add(Dense::new(1, 1));
-
-    model.summary();
+    model.add(Dense{input_units: 1, output_units:1});
 
     model.compile(MSE{},
-        Optimizer::SGD,
+        SGD::new(0.0000002),
         vec![Metrics::Accuracy]);
+
+    model.summary();
 
     // We train the model for 100 epochs
     model.fit(&dataset, 100, true);

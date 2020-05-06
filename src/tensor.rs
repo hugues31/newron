@@ -325,6 +325,30 @@ impl<'a, 'b> Add<&'b Tensor> for &'b Tensor {
     }
 }
 
+impl<'b> Add<&'b Tensor> for Tensor {
+    type Output = Tensor;
+
+    fn add(self, other: &'b Tensor) -> Tensor {
+        if self.shape.len() > 1 && other.shape.len() > 1 {
+            if self.shape[1] != other.shape[1] {
+                panic!("Could not add 2 tensors of different. {:?} + {:?}", self, other);
+            }          
+        }
+
+        let mut data = Vec::new();
+        for i in 0..cmp::max(self.data.len(), other.data.len()) {
+            let a = self.data[i % self.data.len()];
+            let b = other.data[i % other.data.len()];
+            data.push(a + b);
+        }
+
+        Tensor {
+            data,
+            shape: self.shape.to_vec(),
+        }
+    }
+}
+
 // Implement addition for tensor
 impl Add for Tensor {
     type Output = Tensor;
@@ -374,6 +398,21 @@ impl SubAssign for Tensor {
         };
     }
 }
+
+impl<'a> SubAssign<&'a Tensor> for Tensor {
+    fn sub_assign(&mut self, other: &'a Tensor) {
+        *self = Self {
+            data: self
+                .data
+                .iter()
+                .zip(other.data.iter())
+                .map(|(a, b)| a - b)
+                .collect(),
+            shape: self.shape.to_vec(),
+        };
+    }
+}
+
 
 // Implement multiplication for tensor
 impl<'a, 'b> Mul<&'b Tensor> for &'a Tensor {
@@ -459,6 +498,17 @@ impl<'a> Mul<&'a Tensor> for f64 {
     type Output = Tensor;
 
     fn mul(self, other: &'a Tensor) -> Tensor {
+        Tensor {
+            data: other.data.iter().map(|a| a * self).collect(),
+            shape: other.shape.to_vec(),
+        }
+    }
+}
+
+impl<'a> Mul<&'a mut &Tensor> for f64 {
+    type Output = Tensor;
+
+    fn mul(self, other: &'a mut &Tensor) -> Tensor {
         Tensor {
             data: other.data.iter().map(|a| a * self).collect(),
             shape: other.shape.to_vec(),
