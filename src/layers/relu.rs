@@ -25,6 +25,7 @@ impl Layer for ReLU {
         vec![]
     }
 
+
     fn get_grad(&self, param: &LearnableParams) -> &Tensor {
         panic!("Layer does not have learnable parameters.")
     }

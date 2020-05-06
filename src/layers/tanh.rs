@@ -31,6 +31,7 @@ impl Layer for TanH {
 
     fn get_param(&mut self, param: &LearnableParams) -> &mut Tensor {
         panic!("Layer does not have learnable parameters.")
+
     }
 }
 

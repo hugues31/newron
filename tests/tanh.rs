@@ -28,7 +28,7 @@ mod softmax_tests {
 
         let backward = layer.backward(&input, &layer.forward(&input));
         
-        // ~ [ 0.  0.91715234  0.78071444  0.99627208] dot [0.0, 0.9, 0.8, 1.0]
+        // ~ [ 0.  0.91715234  0.78071444  0.99627208] ⊙ [0.0, 0.9, 0.8, 1.0]
         let result = Tensor::new(vec![0.0, 0.1, 0.3, 0.0], vec![1, 4]);
 
         assert_eq!(utils::round_vector(backward.data, 1), result.data);
