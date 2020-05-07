@@ -18,13 +18,13 @@ fn main() {
 
     let mut model = Sequential::new();
     
-    model.set_seed(3);
+    model.set_seed(263);
 
     model.add(Dense{input_units:3, output_units:8});
     model.add(TanH);
 
     model.add(Dense{input_units:8, output_units:1});
-    model.add(ReLU);
+    // model.add(ReLU);
 
     model.compile(MSE{},
         SGD::new(0.0002),
