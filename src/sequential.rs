@@ -10,6 +10,11 @@ use crate::{loss::loss::Loss, random::Rand, optimizers::optimizer::OptimizerStep
 use crate::loss::categorical_entropy::CategoricalEntropy;
 use crate::utils;
 
+struct Batch {
+    inputs: Tensor,
+    targets: Tensor
+}
+
 pub struct Sequential {
     pub layers_enum: Vec<LayerEnum>,
     pub layers: Vec<Box<dyn Layer>>,
@@ -101,7 +106,7 @@ impl Sequential {
 
     /// Return a vector containing all batch
     /// if `shuffle` is set to true, batches are randomized
-    fn get_batches(&mut self, dataset: &Dataset, batch_size: usize, shuffle: bool) -> Vec<(Tensor, Tensor)> {
+    fn get_batches(&mut self, dataset: &Dataset, batch_size: usize, shuffle: bool) -> Vec<Batch> {
         let x_train = dataset.get_tensor(RowType::Train, ColumnType::Feature); 
         let y_train = dataset.get_tensor(RowType::Train, ColumnType::Target);
         
@@ -121,7 +126,7 @@ impl Sequential {
             let x_batch = x_train.get_rows(batch_indices);
 
             let y_batch = y_train.get_rows(batch_indices);
-            result.push((x_batch, y_batch));
+            result.push(Batch {inputs: x_batch, targets: y_batch});
         }
     
         result
@@ -142,8 +147,8 @@ impl Sequential {
             let batches = self.get_batches(dataset, batch_size, true);
 
             for batch in batches {
-                let x_batch = batch.0;
-                let y_batch = batch.1;
+                let x_batch = batch.inputs;
+                let y_batch = batch.targets;
                 
                 epoch_loss += self.train(x_batch, &y_batch);
             }
