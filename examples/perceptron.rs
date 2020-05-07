@@ -17,6 +17,8 @@ fn main() {
     .unwrap();
 
     let mut model = Sequential::new();
+    
+    model.set_seed(3);
 
     model.add(Dense{input_units:3, output_units:8});
     model.add(TanH);
@@ -30,7 +32,7 @@ fn main() {
 
     model.summary();
 
-    model.fit(&dataset, 1_000, true);
+    model.fit(&dataset, 5_000, true);
 
     let features_to_predict = vec![1.0, 0.0, 1.0];
     let prediction = model.predict(&features_to_predict);

@@ -60,7 +60,7 @@ impl Sequential {
             self.layers.push(
                 match layer {
                     LayerEnum::Dense { input_units, output_units } => {
-                        Box::new(dense::Dense::new(*input_units, *output_units))
+                        Box::new(dense::Dense::new(*input_units, *output_units, self.seed))
                     }
                     LayerEnum::ReLU => {
                         Box::new(relu::ReLU::new())

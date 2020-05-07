@@ -11,12 +11,12 @@ pub struct Dense {
 }
 
 impl Dense {
-    pub fn new(input_units: usize, output_units: usize) -> Dense {
+    pub fn new(input_units: usize, output_units: usize, seed: u32) -> Dense {
         // initialize with random values following special normal distribution
         // allowing theoritical faster convergence (Xavier Initialization)
         Dense {
             input: Tensor::new(vec![], vec![]),
-            weights: Tensor::random_normal(vec![input_units, output_units], 0.0, 2.0 / (input_units + output_units) as f64, output_units as u32),
+            weights: Tensor::random_normal(vec![input_units, output_units], 0.0, 2.0 / (input_units + output_units) as f64, seed),
             biases: Tensor::one(vec![1, output_units]),
             weights_grad: Tensor::new(vec![], vec![]),
             biases_grad: Tensor::new(vec![], vec![])
