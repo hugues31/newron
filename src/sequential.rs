@@ -81,7 +81,7 @@ impl Sequential {
     }
 
     // Return the list of layer outputs given an input
-    fn forward_propagation(&mut self, input: Tensor, train: bool) -> Vec<Tensor> {
+    fn forward_propagation(&mut self, input: Tensor, train: bool) -> Tensor {
         // Compute activations of all network layers by applying them sequentially.
         // Return a list of activations for each layer.
         // Note : Tensor may include one or several rows
@@ -96,7 +96,7 @@ impl Sequential {
         }
 
         assert_eq!(activations.len(), self.layers.len() + 1);
-        activations
+        activations.last().unwrap().clone()
     }
 
     /// Return a vector containing all batch
@@ -136,24 +136,21 @@ impl Sequential {
         
         // auto batch size : TODO improve it
         let batch_size = cmp::min(dataset.get_row_count(), 16);
-
+    
         for epoch in 0..epochs {
+            let mut epoch_loss = 0.0;
             let batches = self.get_batches(dataset, batch_size, true);
 
             for batch in batches {
                 let x_batch = batch.0;
                 let y_batch = batch.1;
                 
-                self.train(x_batch, &y_batch);
+                epoch_loss += self.train(x_batch, &y_batch);
             }
 
             if verbose {
                 println!("Epoch: {}", epoch);
-
-                let train_predictions = self.predict_tensor(dataset.get_tensor(RowType::Train, ColumnType::Feature));
-                let train_true_values = &dataset.get_tensor(RowType::Train, ColumnType::Target);
-                let train_loss = self.loss.compute_loss(train_true_values, &train_predictions);
-                println!("Train error: {}", train_loss);
+                println!("Train loss: {}", epoch_loss);
 
                 if dataset.count_row_type(&RowType::Test) > 0 {
                     let test_predictions = self.predict_tensor(dataset.get_tensor(RowType::Test, ColumnType::Feature));
@@ -187,24 +184,21 @@ impl Sequential {
 
 
     /// Train the network and return the loss
-    pub fn train(&mut self, x_batch: Tensor, y_batch: &Tensor) {
+    pub fn train(&mut self, x_batch: Tensor, y_batch: &Tensor) -> f64 {
         // Train our network on a given batch of x_batch and y_batch.
         // Size of the batch = # rows of x_batch = # rows of y_batch
         // We first need to run forward to get all layer activations.
         // Then we can run layer.backward going from last to first layer.
 
         // Get the layer activations
-        let x_batch_clone = x_batch.clone();
-        let mut layer_activations = self.forward_propagation(x_batch, true);
-        layer_activations.insert(0, x_batch_clone);
-
-        let size_batch = y_batch.shape[0];
+        // let x_batch_clone = x_batch.clone();
+        let output = self.forward_propagation(x_batch, true);
 
         // compute loss and average loss gradient
-        let loss = self.loss.compute_loss(&y_batch, &layer_activations.last().unwrap());
+        let loss = self.loss.compute_loss(&y_batch, &output);
 
         // Compute the loss gradient
-        let loss_grad = self.loss.compute_loss_grad(&y_batch, &layer_activations.last().unwrap());
+        let loss_grad = self.loss.compute_loss_grad(&y_batch, &output);
 
         let mut gradient = loss_grad;
 
@@ -216,6 +210,7 @@ impl Sequential {
         // Update parameters according to the Optimizer specified
         self.optim.step(&mut self.layers);
 
+        loss
     }
 
     pub fn predict(&mut self, input: &Vec<f64>) -> Tensor {
@@ -225,9 +220,6 @@ impl Sequential {
 
     pub fn predict_tensor(&mut self, input: Tensor) -> Tensor {
         // The output of the network is the last layer output
-        match self.forward_propagation(input, false).last() {
-            Some(x) => x.clone(),
-            None => panic!("No prediction."),
-        }
+        self.forward_propagation(input, false)
     }
 }

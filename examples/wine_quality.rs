@@ -31,7 +31,7 @@ fn main() {
     model.add(ReLU);
 
     model.compile(MSE{},
-        SGD::new(0.002),
+        SGD::new(0.2),
         vec![Metrics::Accuracy]);
 
     model.fit(&dataset, 200, true);

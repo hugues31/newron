@@ -27,12 +27,12 @@ fn main() {
     model.add(ReLU);
 
     model.compile(MSE{},
-        SGD::new(0.002),
+        SGD::new(0.02),
         vec![Metrics::Accuracy]);
 
     model.summary();
 
-    model.fit(&dataset, 5_000, true);
+    model.fit(&dataset, 200, true);
 
     let features_to_predict = vec![1.0, 0.0, 1.0];
     let prediction = model.predict(&features_to_predict);
