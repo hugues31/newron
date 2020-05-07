@@ -17,11 +17,11 @@ Please see the [docs](https://docs.rs/newron/) or review [examples](https://gith
 
 | Feature                                                                             | Progress | Comment |
 |-------------------------------------------------------------------------------------|----------|---------|
-| Improve metrics (confusion matrix struct and method to compute accuracy, recall..)  |◯◯◯◯◯|         |
-| Implement Convolutional Layer                                                       |◯◯◯◯◯|         |
-| Implement RNN Layer                                                                 |◯◯◯◯◯|         |
-| Webapp to monitor training phase                                                    |◯◯◯◯◯|         |
-| Save and load trained models/weights                                                |◯◯◯◯◯|         |
+| Improve metrics (confusion matrix struct and method to compute accuracy, recall..)  |◯◯◯◯◯     |         |
+| Implement Convolutional Layer                                                       |◯◯◯◯◯     |         |
+| Implement RNN Layer                                                                 |◯◯◯◯◯     |         |
+| Webapp to monitor training phase                                                    |◯◯◯◯◯     |         |
+| Save and load trained models/weights                                                |◯◯◯◯◯     |         |
 
 
 ## Contribution

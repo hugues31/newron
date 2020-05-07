@@ -87,23 +87,15 @@ impl Sequential {
         // Note : Tensor may include one or several rows
 
         let mut activations: Vec<Tensor> = Vec::new();
+        activations.push(input);
         
-        // First propagation with the input
-        // TODO: refactor without loop
-        for layer in self.layers.iter_mut() {
-            let first_layer = layer;
-            activations.push(first_layer.forward(input.clone()));
-            break
-        }
-
         // Next propagations with the last propagated values
-        for layer in self.layers.iter_mut().skip(1) {
-            let last_activation = activations.last().unwrap();
-            let activation = layer.forward(last_activation.clone());
+        for layer in self.layers.iter_mut() {
+            let activation = layer.forward(activations.last().unwrap().clone());
             activations.push(activation);
         }
 
-        assert_eq!(activations.len(), self.layers.len());
+        assert_eq!(activations.len(), self.layers.len() + 1);
         activations
     }
 
