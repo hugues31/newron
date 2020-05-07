@@ -82,7 +82,6 @@ impl Sequential {
                 }
             );
         }
-  
     }
 
     // Return the last layer output given an input
@@ -108,8 +107,9 @@ impl Sequential {
 
         for layer in self.layers.iter_mut().rev() {
             let gradient = layer.backward(gradients.last().unwrap());
+            gradients.push(gradient);
         }
-
+        
         gradients.last().unwrap().clone()
     }
 
@@ -164,20 +164,16 @@ impl Sequential {
 
                 // Get the layer activations
                 // let x_batch_clone = x_batch.clone();
-                let output = self.forward_propagation(batch.inputs, true);
+                let predicted = self.forward_propagation(batch.inputs, true);
 
                 // compute loss and average loss gradient
-                epoch_loss += self.loss.compute_loss(&batch.targets, &output);
+                epoch_loss += self.loss.compute_loss(&batch.targets, &predicted);
 
                 // Compute the loss gradient
-                let loss_grad = self.loss.compute_loss_grad(&batch.targets, &output);
+                let loss_grad = self.loss.compute_loss_grad(&batch.targets, &predicted);
 
-                let mut gradient = loss_grad;
-
-                // Propagate gradients through the network layers (backpropagation)
-                for layer in self.layers.iter_mut().rev() {
-                    gradient = layer.backward(&gradient);
-                }
+                // Compute layers gradient
+                self.backward_propagation(loss_grad);
 
                 // Update parameters according to the Optimizer specified
                 self.optim.step(&mut self.layers);

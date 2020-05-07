@@ -41,7 +41,7 @@ impl Tensor {
         let mut rng = Rand::new(seed);
 
         let number_values = shape.iter().product();
-        let data: Vec<f64> = (0..number_values).map(|_| (rng.rand_float() - 0.5) * 2.0).collect();
+        let data: Vec<f64> = (0..number_values).map(|_| rng.rand_float()).collect();
         Tensor { data, shape }
     }
 
