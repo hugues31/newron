@@ -71,6 +71,9 @@ impl Sequential {
                     LayerEnum::TanH => {
                         Box::new(tanh::TanH::new())
                     }
+                    LayerEnum::Sigmoid => {
+                        Box::new(sigmoid::Sigmoid::new())
+                    }
                 }
             );
         }

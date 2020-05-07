@@ -9,6 +9,7 @@ pub enum LayerEnum {
     Dense {input_units: usize, output_units: usize},
     ReLU,
     Softmax,
+    Sigmoid,
     TanH
 }
 
