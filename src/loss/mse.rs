@@ -3,7 +3,7 @@ pub struct MSE {}
 
 impl Loss for MSE {
     fn compute_loss(&self, y_true: &Tensor, y_pred: &Tensor) -> f64 {
-        let loss = (y_pred - y_true).map(|x| x*x).get_mean(0).data[0];
+        let loss = (y_pred - y_true).map(|x| x*x).get_sum(0).data[0];
         loss
     }
 

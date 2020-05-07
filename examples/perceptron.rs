@@ -27,7 +27,7 @@ fn main() {
     model.add(ReLU);
 
     model.compile(MSE{},
-        SGD::new(0.02),
+        SGD::new(0.0002),
         vec![Metrics::Accuracy]);
 
     model.summary();

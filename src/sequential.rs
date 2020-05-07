@@ -85,16 +85,14 @@ impl Sequential {
   
     }
 
-    // Return the list of layer outputs given an input
+    // Return the last layer output given an input
     fn forward_propagation(&mut self, input: Tensor, train: bool) -> Tensor {
         // Compute activations of all network layers by applying them sequentially.
-        // Return a list of activations for each layer.
-        // Note : Tensor may include one or several rows
 
         let mut activations: Vec<Tensor> = Vec::new();
         activations.push(input);
         
-        // Next propagations with the last propagated values
+        // Iterate throught all layers, starting with `input`
         for layer in self.layers.iter_mut() {
             let activation = layer.forward(activations.last().unwrap().clone());
             activations.push(activation);
@@ -102,6 +100,17 @@ impl Sequential {
 
         assert_eq!(activations.len(), self.layers.len() + 1);
         activations.last().unwrap().clone()
+    }
+
+    fn backward_propagation(&mut self, gradient: Tensor) -> Tensor {
+        let mut gradients = Vec::new();
+        gradients.push(gradient);
+
+        for layer in self.layers.iter_mut().rev() {
+            let gradient = layer.backward(gradients.last().unwrap());
+        }
+
+        gradients.last().unwrap().clone()
     }
 
     /// Return a vector containing all batch
@@ -124,8 +133,8 @@ impl Sequential {
             let batch_indices: &[usize] = &indices[batch_index..batch_index + batch_size];
 
             let x_batch = x_train.get_rows(batch_indices);
-
             let y_batch = y_train.get_rows(batch_indices);
+
             result.push(Batch {inputs: x_batch, targets: y_batch});
         }
     
@@ -144,13 +153,34 @@ impl Sequential {
     
         for epoch in 0..epochs {
             let mut epoch_loss = 0.0;
+
             let batches = self.get_batches(dataset, batch_size, true);
 
             for batch in batches {
-                let x_batch = batch.inputs;
-                let y_batch = batch.targets;
-                
-                epoch_loss += self.train(x_batch, &y_batch);
+                // Train our network on a given batch of x_batch and y_batch.
+                // Size of the batch = # rows of x_batch = # rows of y_batch
+                // We first need to run forward to get all layer activations.
+                // Then we can run layer.backward going from last to first layer.
+
+                // Get the layer activations
+                // let x_batch_clone = x_batch.clone();
+                let output = self.forward_propagation(batch.inputs, true);
+
+                // compute loss and average loss gradient
+                epoch_loss += self.loss.compute_loss(&batch.targets, &output);
+
+                // Compute the loss gradient
+                let loss_grad = self.loss.compute_loss_grad(&batch.targets, &output);
+
+                let mut gradient = loss_grad;
+
+                // Propagate gradients through the network layers (backpropagation)
+                for layer in self.layers.iter_mut().rev() {
+                    gradient = layer.backward(&gradient);
+                }
+
+                // Update parameters according to the Optimizer specified
+                self.optim.step(&mut self.layers);
             }
 
             if verbose {
@@ -185,37 +215,6 @@ impl Sequential {
                 }
             }
         }
-    }
-
-
-    /// Train the network and return the loss
-    pub fn train(&mut self, x_batch: Tensor, y_batch: &Tensor) -> f64 {
-        // Train our network on a given batch of x_batch and y_batch.
-        // Size of the batch = # rows of x_batch = # rows of y_batch
-        // We first need to run forward to get all layer activations.
-        // Then we can run layer.backward going from last to first layer.
-
-        // Get the layer activations
-        // let x_batch_clone = x_batch.clone();
-        let output = self.forward_propagation(x_batch, true);
-
-        // compute loss and average loss gradient
-        let loss = self.loss.compute_loss(&y_batch, &output);
-
-        // Compute the loss gradient
-        let loss_grad = self.loss.compute_loss_grad(&y_batch, &output);
-
-        let mut gradient = loss_grad;
-
-        // Propagate gradients through the network layers (backpropagation)
-        for layer in self.layers.iter_mut().rev() {
-            gradient = layer.backward(&gradient);
-        }
-
-        // Update parameters according to the Optimizer specified
-        self.optim.step(&mut self.layers);
-
-        loss
     }
 
     pub fn predict(&mut self, input: &Vec<f64>) -> Tensor {

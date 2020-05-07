@@ -37,7 +37,7 @@ impl Layer for TanH {
 
 impl TanH {
     fn tanh(x: f64) -> f64 {
-        (2.0 / (1.0 + (-2.0 * x).exp())) - 1.0
+        x.tanh()
     }
 
     fn tanh_prime(x: f64) -> f64 {
