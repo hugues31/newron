@@ -80,16 +80,19 @@ impl Tensor {
         Tensor::new(result, shape.to_vec())
     }
 
-    /// Transpose matrix. Only for 2 dimensionals Tensor (matrix)
-    pub fn transpose(&mut self) {
-        // TODO: add check for dimension
-        self.shape = vec![self.shape[1], self.shape[0]];
-    }
 
     /// Creates new matrix based on the transposed `self` Tensor
     pub fn get_transpose(&self) -> Tensor {
+        let mut data = Vec::with_capacity(self.data.len());
+
+        for col in 0..self.shape[1] {
+            for row in 0..self.shape[0] {
+                data.push(self.get_value(row, col));
+            }
+        }
+
         Tensor {
-            data: self.data.to_vec(),
+            data,
             shape: vec![self.shape[1], self.shape[0]],
         }
     }

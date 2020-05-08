@@ -18,21 +18,20 @@ fn main() {
 
     let mut model = Sequential::new();
     
-    model.set_seed(263);
+    model.set_seed(42);
 
-    model.add(Dense{input_units:3, output_units:8});
+    model.add(Dense{input_units:3, output_units:4});
     model.add(TanH);
 
-    model.add(Dense{input_units:8, output_units:1});
-    // model.add(ReLU);
+    model.add(Dense{input_units:4, output_units:1});
 
     model.compile(MSE{},
-        SGD::new(0.0002),
+        SGD::new(0.02),
         vec![Metrics::Accuracy]);
 
     model.summary();
 
-    model.fit(&dataset, 200, true);
+    model.fit(&dataset, 500, true);
 
     let features_to_predict = vec![1.0, 0.0, 1.0];
     let prediction = model.predict(&features_to_predict);

@@ -109,7 +109,7 @@ impl Sequential {
             let gradient = layer.backward(gradients.last().unwrap());
             gradients.push(gradient);
         }
-        
+
         gradients.last().unwrap().clone()
     }
 
@@ -149,12 +149,12 @@ impl Sequential {
         // output_unit_l == input_unit_l+1, output_unit_l_n = y_train.len()) and display message here
         
         // auto batch size : TODO improve it
-        let batch_size = cmp::min(dataset.get_row_count(), 16);
+        let batch_size = cmp::min(dataset.get_row_count(), 128);
     
         for epoch in 0..epochs {
             let mut epoch_loss = 0.0;
 
-            let batches = self.get_batches(dataset, batch_size, true);
+            let batches = self.get_batches(dataset, batch_size, false);
 
             for batch in batches {
                 // Train our network on a given batch of x_batch and y_batch.
@@ -165,13 +165,13 @@ impl Sequential {
                 // Get the layer activations
                 // let x_batch_clone = x_batch.clone();
                 let predicted = self.forward_propagation(batch.inputs, true);
-
+                
                 // compute loss and average loss gradient
                 epoch_loss += self.loss.compute_loss(&batch.targets, &predicted);
-
+                
                 // Compute the loss gradient
                 let loss_grad = self.loss.compute_loss_grad(&batch.targets, &predicted);
-
+                
                 // Compute layers gradient
                 self.backward_propagation(loss_grad);
 
@@ -180,7 +180,7 @@ impl Sequential {
             }
 
             if verbose {
-                println!("Epoch: {}", epoch);
+                println!("\n------\nEpoch: {}", epoch);
                 println!("Train loss: {}", epoch_loss/batch_size as f64);
 
                 if dataset.count_row_type(&RowType::Test) > 0 {

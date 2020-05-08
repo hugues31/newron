@@ -23,13 +23,13 @@ fn main() {
     model.add(Dense{input_units: 1, output_units:1});
 
     model.compile(MSE{},
-        SGD::new(0.02),
+        SGD::new(0.0002),
         vec![Metrics::Accuracy]);
 
     model.summary();
 
-    // We train the model for 100 epochs
-    model.fit(&dataset, 100, true);
+    // We train the model for 200 epochs
+    model.fit(&dataset, 200, true);
 
     // Display the slope and intercept estimated (=Dense weight/bias)
     println!("\n\nEstimated equation :\n{:?}", model.layers[0]);

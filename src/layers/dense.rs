@@ -14,11 +14,12 @@ impl Dense {
     pub fn new(input_units: usize, output_units: usize, seed: u32) -> Dense {
         // initialize with random values following special normal distribution
         // allowing theoritical faster convergence (Xavier Initialization)
-        let variance = 2.0 / (input_units + output_units) as f64;
+        let variance_w = 2.0 / (input_units + output_units) as f64;
+        let variance_b = 2.0 / (output_units) as f64;
         Dense {
             input: Tensor::new(vec![], vec![]),
-            weights: Tensor::random_normal(vec![input_units, output_units], 0.0, variance, seed),
-            biases: Tensor::random_normal(vec![1, output_units], 0.0, variance, seed),
+            weights: Tensor::random_normal(vec![input_units, output_units], 0.0, variance_w, seed),
+            biases: Tensor::random_normal(vec![1, output_units], 1.0, variance_b, seed),
             weights_grad: Tensor::new(vec![], vec![]),
             biases_grad: Tensor::new(vec![], vec![])
         }
@@ -49,7 +50,7 @@ impl Layer for Dense {
         // panic!("input.T {:?}  grad {:?}", &self.input.get_transpose().shape, gradient.shape);
         self.weights_grad = &self.input.get_transpose() * gradient;
         self.biases_grad = gradient.get_sum(0);
-
+        
         assert_eq!(self.weights_grad.shape, self.weights.shape, "Wrong shape for weight gradients.");
         assert_eq!(self.biases_grad.shape, self.biases.shape, "Wrong shape for biases gradients.");
 

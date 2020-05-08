@@ -19,6 +19,7 @@ fn main() {
     println!("{:?}", dataset);
 
     let mut model = Sequential::new();
+    model.set_seed(99);
 
     model.add(Dense {
         input_units: dataset.get_number_features(),
@@ -32,13 +33,11 @@ fn main() {
         output_units: dataset.get_number_targets()
     });
 
-    model.add(Softmax);
-
     model.compile(CategoricalEntropy{},
               SGD::new(0.2),
               vec![Metrics::Accuracy]);
 
     model.summary();
 
-    model.fit(&dataset, 2_000, true);
+    model.fit(&dataset, 20, true);
 }
