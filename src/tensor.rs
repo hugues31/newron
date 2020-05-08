@@ -41,7 +41,7 @@ impl Tensor {
         let mut rng = Rand::new(seed);
 
         let number_values = shape.iter().product();
-        let data: Vec<f64> = (0..number_values).map(|_| (rng.rand_float() - 0.5) * 2.0).collect();
+        let data: Vec<f64> = (0..number_values).map(|_| rng.rand_float()).collect();
         Tensor { data, shape }
     }
 
@@ -80,16 +80,19 @@ impl Tensor {
         Tensor::new(result, shape.to_vec())
     }
 
-    /// Transpose matrix. Only for 2 dimensionals Tensor (matrix)
-    pub fn transpose(&mut self) {
-        // TODO: add check for dimension
-        self.shape = vec![self.shape[1], self.shape[0]];
-    }
 
     /// Creates new matrix based on the transposed `self` Tensor
     pub fn get_transpose(&self) -> Tensor {
+        let mut data = Vec::with_capacity(self.data.len());
+
+        for col in 0..self.shape[1] {
+            for row in 0..self.shape[0] {
+                data.push(self.get_value(row, col));
+            }
+        }
+
         Tensor {
-            data: self.data.to_vec(),
+            data,
             shape: vec![self.shape[1], self.shape[0]],
         }
     }
@@ -210,6 +213,14 @@ impl Tensor {
         }
     }
 
+    pub fn add_row(&mut self, row: Vec<f64>) {
+        // increment row count
+        self.shape[0] += 1;
+
+        // add data
+        self.data.extend(row);
+    }
+
     /// Creates a new Tensor where the function `f` is applied
     /// element-wise. Does not change the shape of tensor.
     pub fn map(&self, f: fn(f64) -> f64) -> Tensor {
@@ -317,6 +328,30 @@ impl<'a, 'b> Add<&'b Tensor> for &'b Tensor {
     }
 }
 
+impl<'b> Add<&'b Tensor> for Tensor {
+    type Output = Tensor;
+
+    fn add(self, other: &'b Tensor) -> Tensor {
+        if self.shape.len() > 1 && other.shape.len() > 1 {
+            if self.shape[1] != other.shape[1] {
+                panic!("Could not add 2 tensors of different. {:?} + {:?}", self, other);
+            }          
+        }
+
+        let mut data = Vec::new();
+        for i in 0..cmp::max(self.data.len(), other.data.len()) {
+            let a = self.data[i % self.data.len()];
+            let b = other.data[i % other.data.len()];
+            data.push(a + b);
+        }
+
+        Tensor {
+            data,
+            shape: self.shape.to_vec(),
+        }
+    }
+}
+
 // Implement addition for tensor
 impl Add for Tensor {
     type Output = Tensor;
@@ -366,6 +401,21 @@ impl SubAssign for Tensor {
         };
     }
 }
+
+impl<'a> SubAssign<&'a Tensor> for Tensor {
+    fn sub_assign(&mut self, other: &'a Tensor) {
+        *self = Self {
+            data: self
+                .data
+                .iter()
+                .zip(other.data.iter())
+                .map(|(a, b)| a - b)
+                .collect(),
+            shape: self.shape.to_vec(),
+        };
+    }
+}
+
 
 // Implement multiplication for tensor
 impl<'a, 'b> Mul<&'b Tensor> for &'a Tensor {
@@ -451,6 +501,17 @@ impl<'a> Mul<&'a Tensor> for f64 {
     type Output = Tensor;
 
     fn mul(self, other: &'a Tensor) -> Tensor {
+        Tensor {
+            data: other.data.iter().map(|a| a * self).collect(),
+            shape: other.shape.to_vec(),
+        }
+    }
+}
+
+impl<'a> Mul<&'a mut &Tensor> for f64 {
+    type Output = Tensor;
+
+    fn mul(self, other: &'a mut &Tensor) -> Tensor {
         Tensor {
             data: other.data.iter().map(|a| a * self).collect(),
             shape: other.shape.to_vec(),

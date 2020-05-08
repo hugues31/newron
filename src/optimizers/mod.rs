@@ -1,2 +1,2 @@
-mod sgd;
-pub mod optimizer;
+pub mod sgd;
+pub(crate) mod optimizer;

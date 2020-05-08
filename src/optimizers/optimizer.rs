@@ -1,7 +1,5 @@
-trait OptimizerStep {
-    fn step();
-}
+use crate::layers::layer::Layer;
 
-pub enum Optimizer {
-    SGD
+pub trait OptimizerStep {
+    fn step(&self, layers: &mut [Box<dyn Layer>]);
 }

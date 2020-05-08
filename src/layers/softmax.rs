@@ -1,14 +1,46 @@
 use crate::layers::layer::Layer;
 use crate::tensor::Tensor;
-
-pub struct Softmax;
+use crate::layers::layer::LearnableParams;
+pub struct Softmax {
+    input: Tensor
+}
 
 impl Layer for Softmax {
     fn get_info(&self) -> String {
         format!("Softmax Layer")
     }
 
-    fn forward(&self, input: &Tensor) -> Tensor {
+    fn forward(&mut self, input: Tensor) -> Tensor {
+        self.input = input;
+
+        Softmax::softmax(&self.input)
+    }
+
+    fn backward(&mut self, gradient: &Tensor) -> Tensor {
+        Softmax::softmax_prime(&self.input, gradient)
+    }
+
+    fn get_params_list(&self) -> Vec<LearnableParams> {
+        vec![]
+    }
+
+    fn get_grad(&self, param: &LearnableParams) -> &Tensor {
+        panic!("Layer does not have learnable parameters.")
+    }
+
+    fn get_param(&mut self, param: &LearnableParams) -> &mut Tensor {
+        panic!("Layer does not have learnable parameters.")
+    }
+}
+
+impl Softmax {
+    pub(crate) fn new() -> Softmax {
+        Softmax {
+            input: Tensor::new(vec![], vec![])
+        }
+    }
+
+    pub(crate) fn softmax(input: &Tensor) -> Tensor {
         // we use stable softmax instead of classic softmax
         // for computational stability
 
@@ -18,12 +50,10 @@ impl Layer for Softmax {
         numerator / denominator
     }
 
-    fn backward(&mut self, input: &Tensor, grad_output: Tensor) -> Tensor {
-        // https://themaverickmeerkat.com/2019-10-23-Softmax/
-        // https://medium.com/@aerinykim/how-to-implement-the-softmax-derivative-independently-from-any-loss-function-ae6d44363a9d
+    pub(crate) fn softmax_prime(input: &Tensor, gradient: &Tensor) -> Tensor {
         let m = input.shape[0];
         let n = input.shape[1];
-        let p = self.forward(input);
+        let p = Softmax::softmax(&input);
 
         // tensor1 is a 3D tensor (batch size * n x n matrix)
         let mut tensor1: Vec<Tensor> = Vec::new();
@@ -55,21 +85,21 @@ impl Layer for Softmax {
         for observations in 0..m {
             d_softmax.push(&tensor2[observations] - &tensor1[observations]);
         }
-
+        
         let mut data = Vec::new();
         for observation in 0..m {
             for col in 0..n {
                 let mut acc = 0.0;
                 for col_iter in 0..n {
-                    acc += d_softmax[observation].get_value(col, col_iter) * grad_output.get_value(observation, col_iter);
+                    acc += d_softmax[observation].get_value(col, col_iter) * gradient.get_value(0, col_iter);
                 }
                 data.push(acc);
             }  
         }
-
+        
         Tensor {
             data,
-            shape: grad_output.shape.to_vec()
+            shape: gradient.shape.to_vec()
         }
     }
 }

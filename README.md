@@ -13,15 +13,31 @@ Newron is a Rust library to train deep learning models.
 
 Please see the [docs](https://docs.rs/newron/) or review [examples](https://github.com/hugues31/newron/tree/master/examples) to learn more about Newron features.
 
+## Features
+
+Layers:
+- Dense (Linear fully connected layer)
+- ReLU
+- TanH
+- Sigmoid
+- Softmax
+
+Loss:
+- Mean Square Error (MSE)
+- Categorical Entropy
+
+Optimizers:
+- SGD
+
 ## Roadmap
 
 | Feature                                                                             | Progress | Comment |
 |-------------------------------------------------------------------------------------|----------|---------|
-| Improve metrics (confusion matrix struct and method to compute accuracy, recall..)  |◯◯◯◯◯|         |
-| Implement Convolutional Layer                                                       |◯◯◯◯◯|         |
-| Implement RNN Layer                                                                 |◯◯◯◯◯|         |
-| Webapp to monitor training phase                                                    |◯◯◯◯◯|         |
-| Save and load trained models/weights                                                |◯◯◯◯◯|         |
+| Improve metrics (confusion matrix struct and method to compute accuracy, recall..)  |⬤◯◯◯◯    |         |
+| Implement Convolutional Layer                                                       |◯◯◯◯◯     |         |
+| Implement RNN Layer                                                                 |◯◯◯◯◯     |         |
+| Webapp to monitor training phase                                                    |◯◯◯◯◯     |         |
+| Save and load trained models/weights                                                |◯◯◯◯◯     |         |
 
 
 ## Contribution

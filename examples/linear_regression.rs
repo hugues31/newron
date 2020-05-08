@@ -1,9 +1,9 @@
 use newron::dataset::Dataset;
-use newron::layers::{dense::Dense};
+use newron::layers::LayerEnum::*;
 use newron::sequential::Sequential;
 use newron::loss::{mse::MSE};
 use newron::metrics::Metrics;
-use newron::optimizers::optimizer::Optimizer;
+use newron::optimizers::sgd::SGD;
 
 fn main() {
     // Sample the function f(x) = 0.2x + 2
@@ -20,16 +20,16 @@ fn main() {
     let mut model = Sequential::new();
 
     // We only need one neuron (slope + intercept (bias))
-    model.add(Dense::new(1, 1));
+    model.add(Dense{input_units: 1, output_units:1});
+
+    model.compile(MSE{},
+        SGD::new(0.0002),
+        vec![Metrics::Accuracy]);
 
     model.summary();
 
-    model.compile(MSE{},
-        Optimizer::SGD,
-        vec![Metrics::Accuracy]);
-
-    // We train the model for 100 epochs
-    model.fit(&dataset, 100, true);
+    // We train the model for 200 epochs
+    model.fit(&dataset, 200, true);
 
     // Display the slope and intercept estimated (=Dense weight/bias)
     println!("\n\nEstimated equation :\n{:?}", model.layers[0]);
@@ -39,7 +39,7 @@ fn main() {
     let prediction = model.predict(&vec![value_to_predict]).get_value(0, 0);
     let true_value = 0.2 * value_to_predict + 2.0;
     println!(
-        "Prediction for X={} -> Y={} (true value={})",
+        "Prediction for X={} -> Y={:.4} (true value={:.4})",
         &value_to_predict, &prediction, &true_value
     );
 }

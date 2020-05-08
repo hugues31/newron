@@ -229,4 +229,21 @@ mod tensor_tests {
         assert_eq!(a / b, result);
     }
 
+    #[test]
+    fn test_get_transpose() {
+        let a = Tensor::new(vec![
+             4.0,  6.0,  8.0,
+            10.0, 12.0, 14.0], vec![2, 3]);
+
+        let a_t = a.get_transpose();
+
+        let result = Tensor::new(vec![
+            4.0, 10.0,
+            6.0, 12.0,
+            8.0, 14.0,
+        ], vec![3, 2]);
+
+        assert_eq!(a_t, result);
+    }
+
 }

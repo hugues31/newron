@@ -1,29 +1,52 @@
 use crate::layers::layer::Layer;
 use crate::tensor::Tensor;
+use crate::layers::layer::LearnableParams;
 
-pub struct Tanh;
+pub struct TanH {
+    input: Tensor
+}
 
-impl Layer for Tanh {
+impl Layer for TanH {
     fn get_info(&self) -> String {
         format!("Tanh Layer")
     }
 
-    fn forward(&self, input: &Tensor) -> Tensor {
-        input.map(|x| Tanh::tanh(x))
+    fn forward(&mut self, input: Tensor) -> Tensor {
+        self.input = input;
+        self.input.map(|x| TanH::tanh(x))
     }
 
-    fn backward(&mut self, input: &Tensor, grad_output: Tensor) -> Tensor {
-        let tanh_grad = input.map(|x| Tanh::tanh_prime(x));
-        grad_output.mult_el(&tanh_grad)
+    fn backward(&mut self, gradient: &Tensor) -> Tensor {
+        let tanh_grad = self.input.map(|x| TanH::tanh_prime(x));
+        gradient.mult_el(&tanh_grad)
+    }
+
+    fn get_params_list(&self) -> Vec<LearnableParams> {
+        vec![]
+    }
+    
+    fn get_grad(&self, param: &LearnableParams) -> &Tensor {
+        panic!("Layer does not have learnable parameters.")
+    }
+
+    fn get_param(&mut self, param: &LearnableParams) -> &mut Tensor {
+        panic!("Layer does not have learnable parameters.")
+
     }
 }
 
-impl Tanh {
+impl TanH {
     fn tanh(x: f64) -> f64 {
-        (2.0 / (1.0 + (-2.0 * x).exp())) - 1.0
+        x.tanh()
     }
 
     fn tanh_prime(x: f64) -> f64 {
         1.0 - Self::tanh(x).powi(2)
+    }
+
+    pub fn new() -> TanH {
+        TanH {
+            input: Tensor::new(vec![], vec![])
+        }
     }
 }
