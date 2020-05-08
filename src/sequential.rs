@@ -181,7 +181,7 @@ impl Sequential {
 
             if verbose {
                 println!("Epoch: {}", epoch);
-                println!("Train loss: {}", epoch_loss);
+                println!("Train loss: {}", epoch_loss/batch_size as f64);
 
                 if dataset.count_row_type(&RowType::Test) > 0 {
                     let test_predictions = self.predict_tensor(dataset.get_tensor(RowType::Test, ColumnType::Feature));
