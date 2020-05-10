@@ -10,7 +10,7 @@ impl Layer for Softmax {
         format!("Softmax Layer")
     }
 
-    fn forward(&mut self, input: Tensor) -> Tensor {
+    fn forward(&mut self, input: Tensor, training: bool) -> Tensor {
         self.input = input;
 
         Softmax::softmax(&self.input)

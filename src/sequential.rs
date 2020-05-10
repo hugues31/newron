@@ -79,6 +79,10 @@ impl Sequential {
                     LayerEnum::Sigmoid => {
                         Box::new(sigmoid::Sigmoid::new())
                     }
+                    LayerEnum::Dropout { prob } => {
+                        // Shape of Dropout is the same as last layer
+                        Box::new(dropout::Dropout::new(*prob, self.seed))
+                    }
                 }
             );
         }
@@ -93,7 +97,7 @@ impl Sequential {
         
         // Iterate throught all layers, starting with `input`
         for layer in self.layers.iter_mut() {
-            let activation = layer.forward(activations.last().unwrap().clone());
+            let activation = layer.forward(activations.last().unwrap().clone(), train);
             activations.push(activation);
         }
 
@@ -155,15 +159,14 @@ impl Sequential {
             let mut epoch_loss = 0.0;
 
             let batches = self.get_batches(dataset, batch_size, false);
+            let batches_len = batches.len() as f64;
 
             for batch in batches {
-                // Train our network on a given batch of x_batch and y_batch.
-                // Size of the batch = # rows of x_batch = # rows of y_batch
+                // Train our network on a given batch (containing features & targets).
                 // We first need to run forward to get all layer activations.
                 // Then we can run layer.backward going from last to first layer.
 
-                // Get the layer activations
-                // let x_batch_clone = x_batch.clone();
+                // Forward pass to get the predicted value
                 let predicted = self.forward_propagation(batch.inputs, true);
                 
                 // compute loss and average loss gradient
@@ -181,14 +184,14 @@ impl Sequential {
 
             if verbose {
                 println!("\n------\nEpoch: {}", epoch);
-                println!("Train loss: {}", epoch_loss/batch_size as f64);
+                println!("Train loss: {}", epoch_loss/ batches_len);
 
                 if dataset.count_row_type(&RowType::Test) > 0 {
                     let test_predictions = self.predict_tensor(dataset.get_tensor(RowType::Test, ColumnType::Feature));
                     let test_true_values = &dataset.get_tensor(RowType::Test, ColumnType::Target);
                     assert_eq!(test_predictions.shape, test_true_values.shape, "Something wrong happened... o_O");
                     let test_loss = self.loss.compute_loss(test_true_values, &test_predictions);
-                    println!("Test error: {}", test_loss);
+                    println!("Test loss: {}", test_loss);
 
                     for metric in &self.metrics {
                         match metric {

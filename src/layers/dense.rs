@@ -31,7 +31,7 @@ impl Layer for Dense {
         format!("Weights {}\nBiases {}", self.weights, self.biases)
     }
 
-    fn forward(&mut self, input: Tensor) -> Tensor {
+    fn forward(&mut self, input: Tensor, training: bool) -> Tensor {
         // Perform an affine transformation:
         // f(x) = <W*x> + b
         

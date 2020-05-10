@@ -11,7 +11,7 @@ impl Layer for ReLU {
         format!("ReLU Layer")
     }
 
-    fn forward(&mut self, input: Tensor) -> Tensor {
+    fn forward(&mut self, input: Tensor, training: bool) -> Tensor {
         self.input = input;
         self.input.map(|x| x.max(0.0))
     }
