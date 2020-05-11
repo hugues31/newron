@@ -2,7 +2,7 @@ use std::path::Path;
 
 use newron::dataset::Dataset;
 use newron::layers::LayerEnum::*;
-use newron::loss::{categorical_entropy::CategoricalEntropy};
+use newron::loss::categorical_entropy::CategoricalEntropy;
 use newron::metrics::Metrics;
 use newron::sequential::Sequential;
 use newron::optimizers::sgd::SGD;
@@ -23,15 +23,24 @@ fn main() {
 
     model.add(Dense {
         input_units: dataset.get_number_features(),
-        output_units: 256
+        output_units: 512
     });
 
-    model.add(Dropout {prob: 0.4});
+    model.add(Dropout {prob: 0.2});
     
+    model.add(TanH);
+
+    model.add(Dense {
+        input_units: 512,
+        output_units: 64
+    });
+
+    model.add(Dropout {prob: 0.2});
+
     model.add(ReLU);
 
     model.add(Dense {
-        input_units: 256,
+        input_units: 64,
         output_units: dataset.get_number_targets()
     });
 

@@ -71,7 +71,7 @@ impl Tensor {
             if i < t {
                 result.push(0.0);
             } else {
-                result.push(1.0 / prob);
+                result.push(1.0 / (1.0-prob));
             }
         }
         let mut rng = Rand::new(seed);

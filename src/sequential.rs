@@ -184,14 +184,14 @@ impl Sequential {
 
             if verbose {
                 println!("\n------\nEpoch: {}", epoch);
-                println!("Train loss: {}", epoch_loss/ batches_len);
+                println!("Train loss: {:.4}", epoch_loss/ batches_len);
 
                 if dataset.count_row_type(&RowType::Test) > 0 {
                     let test_predictions = self.predict_tensor(dataset.get_tensor(RowType::Test, ColumnType::Feature));
                     let test_true_values = &dataset.get_tensor(RowType::Test, ColumnType::Target);
                     assert_eq!(test_predictions.shape, test_true_values.shape, "Something wrong happened... o_O");
                     let test_loss = self.loss.compute_loss(test_true_values, &test_predictions);
-                    println!("Test loss: {}", test_loss);
+                    println!("Test loss: {:.4}", test_loss);
 
                     for metric in &self.metrics {
                         match metric {

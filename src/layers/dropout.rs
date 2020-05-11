@@ -17,7 +17,7 @@ impl Dropout {
         // since we use inverse dropout
         // (so we divide 1 by prob = infinity when prob is close to zero)
         
-        if prob < 0.01 {
+        if (1.0 - prob) < 0.01 {
             panic!("Dropout prob {} is to small to be computed efficiently !", prob);
         }
         
@@ -46,10 +46,9 @@ impl Layer for Dropout {
         // We use inverted dropout instead of the classic one here
         self.seed += 1;
         self.mask = Tensor::mask(&input.shape, self.prob, self.seed);
-        // panic!("mask {:?}", self.mask);
         let masked_output = input.mult_el(&self.mask);
-        // panic!("ok");
         self.input = input;
+
         masked_output
     }
 
@@ -61,11 +60,11 @@ impl Layer for Dropout {
         vec![]
     }
 
-    fn get_grad(&self, param: &LearnableParams) -> &Tensor {
+    fn get_grad(&self, _param: &LearnableParams) -> &Tensor {
         panic!("Layer does not have learnable parameters.")
     }
 
-    fn get_param(&mut self, param: &LearnableParams) -> &mut Tensor {
+    fn get_param(&mut self, _param: &LearnableParams) -> &mut Tensor {
         panic!("Layer does not have learnable parameters.")
     }
 
