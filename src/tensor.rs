@@ -62,16 +62,16 @@ impl Tensor {
         Tensor { data, shape }
     }
 
-    pub fn mask(shape: &Vec<usize>, prob: f32, seed: u32) -> Tensor {
+    pub fn mask(shape: &Vec<usize>, prob: f64, seed: u32) -> Tensor {
         let mut result = vec![];
         let number_values = shape.iter().product();
 
         for i in 0..number_values {
-            let t = (prob * number_values as f32) as usize;
+            let t = (prob * number_values as f64) as usize;
             if i < t {
                 result.push(0.0);
             } else {
-                result.push(1.0);
+                result.push(1.0 / (1.0-prob));
             }
         }
         let mut rng = Rand::new(seed);

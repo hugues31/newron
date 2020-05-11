@@ -10,7 +10,7 @@ impl Layer for Softmax {
         format!("Softmax Layer")
     }
 
-    fn forward(&mut self, input: Tensor) -> Tensor {
+    fn forward(&mut self, input: Tensor, _training: bool) -> Tensor {
         self.input = input;
 
         Softmax::softmax(&self.input)
@@ -24,11 +24,11 @@ impl Layer for Softmax {
         vec![]
     }
 
-    fn get_grad(&self, param: &LearnableParams) -> &Tensor {
+    fn get_grad(&self, _param: &LearnableParams) -> &Tensor {
         panic!("Layer does not have learnable parameters.")
     }
 
-    fn get_param(&mut self, param: &LearnableParams) -> &mut Tensor {
+    fn get_param(&mut self, _param: &LearnableParams) -> &mut Tensor {
         panic!("Layer does not have learnable parameters.")
     }
 }
