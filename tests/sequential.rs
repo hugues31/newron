@@ -4,7 +4,7 @@ mod sequential_tests {
     use newron::layers::LayerEnum::*;
     use newron::loss::{mse::MSE};
     use newron::optimizers::sgd::SGD;
-    use newron::metrics::Metrics;
+    use newron::metrics::MetricEnum;
     
     #[test]
     fn test_sequential_stacking() {
@@ -15,7 +15,7 @@ mod sequential_tests {
 
         model.compile(MSE{},
             SGD::new(0.002),
-            vec![Metrics::Accuracy]);
+            vec![MetricEnum::Accuracy]);
 
         assert_eq!(model.layers.len(), 2);
     }

@@ -2,7 +2,7 @@ use newron::dataset::Dataset;
 use newron::layers::LayerEnum::*;
 use newron::sequential::Sequential;
 use newron::loss::{mse::MSE};
-use newron::metrics::Metrics;
+use newron::metrics::MetricEnum;
 use newron::optimizers::sgd::SGD;
 
 fn main() {
@@ -27,7 +27,7 @@ fn main() {
 
     model.compile(MSE{},
         SGD::new(0.02),
-        vec![Metrics::Accuracy]);
+        vec![MetricEnum::Accuracy]);
 
     model.summary();
 
