@@ -1,10 +1,6 @@
 // TODO: Clean ConfusionMatrix conditions
 // TODO: Compute confusion matrix for multiclass
 
-pub enum Metrics {
-    Accuracy
-}
-
 
 struct ConfusionMatrix {
     data: Vec<Vec<f64>>

@@ -55,7 +55,7 @@ impl Sequential {
         println!("Sequential model using {} layers.", self.layers.len());
     }
 
-    pub fn compile<T: 'static + Loss, U: 'static + OptimizerStep>(&mut self, loss: T, optim: U, metrics: Vec<MetricEnum>) {
+    pub fn compile<T: 'static + Loss, U: 'static + OptimizerStep>(&mut self, loss: T, optim: U, metrics: Vec<MetricsEnum>) {
         // Set options
         self.loss = Box::new(loss);
         self.optim = Box::new(optim);
@@ -195,19 +195,9 @@ impl Sequential {
                     for metric in &self.metrics {
                         match metric {
                             MetricEnum::Accuracy => {
-                                let acc_score = accuracy::Accuracy{ 
-                                    y_true: test_true_values, 
-                                    y_pred: &test_predictions 
-                                };
-                                println!("Accuracy : {:.2}%", acc_score);
+                                accuracy::Accuracy{ test_true_values, test_predictions };
+                                println!("Accuracy : {:.2}%", accuracy);
                             }
-                            // MetricEnum::ConnfusionMatrix => {
-                            //     let cm = confusion_matrix::ConfusionMatrix{ 
-                            //         y_true: test_true_values,
-                            //         y_pred: test_predictions 
-                            //     };
-                            //     println!("confusionMatrix : {:.2}%", cm);
-                            // }
                         }
                     }
                 }
