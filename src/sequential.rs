@@ -196,18 +196,17 @@ impl Sequential {
                         match metric {
                             MetricEnum::Accuracy => {
                                 let acc_score = accuracy::Accuracy{ 
-                                    y_true: test_true_values, 
-                                    y_pred: &test_predictions 
+                                    y_true: test_true_values.clone(), 
+                                    y_pred: test_predictions.clone() 
                                 };
                                 println!("Accuracy : {:.2}%", acc_score);
                             }
-                            // MetricEnum::ConnfusionMatrix => {
-                            //     let cm = confusion_matrix::ConfusionMatrix{ 
-                            //         y_true: test_true_values,
-                            //         y_pred: test_predictions 
-                            //     };
-                            //     println!("confusionMatrix : {:.2}%", cm);
-                            // }
+                            MetricEnum::ConfusionMatrix => {
+                                let cm = confusion_matrix::ConfusionMatrix{ 
+                                    y_true: test_true_values.clone(),
+                                    y_pred: test_predictions.clone() 
+                                };
+                            }
                         }
                     }
                 }

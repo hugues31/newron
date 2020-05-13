@@ -1,15 +1,11 @@
-// use crate::metrics::metrics::Metri
 use std::fmt;
 use crate::utils;
 use crate::tensor::Tensor;
-//
-// input    ->   { y_true <vec>, y_pred <vec> }
-// output   ->   { f64 }
 
 
 pub struct Accuracy{
-    y_true: Tensor,
-    y_pred: Tensor,
+    pub y_true: Tensor,
+    pub y_pred: Tensor,
 }
 
 impl Accuracy {
@@ -25,6 +21,7 @@ impl Accuracy {
                 correct_preds += 1;
             }
         }
+
         let accuracy = correct_preds as f64 / predictions_categories.len() as f64 * 100.0;
 
         accuracy 
