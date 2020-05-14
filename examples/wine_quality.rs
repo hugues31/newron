@@ -5,7 +5,7 @@ use newron::layers::LayerEnum::*;
 use newron::optimizers::sgd::SGD;
 use newron::sequential::Sequential;
 use newron::loss::{mse::MSE};
-use newron::metrics::MetricEnum;
+use newron::metrics::Metric;
 
 fn main() {
     let dataset = Dataset::from_csv(Path::new("datasets/winequality-white.csv"), true).unwrap();
@@ -30,7 +30,7 @@ fn main() {
 
     model.compile(MSE{},
         SGD::new(0.0002),
-        vec![MetricEnum::Accuracy]);
+        vec![Metric::Accuracy]);
 
     model.fit(&dataset, 200, true);
 }

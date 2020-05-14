@@ -3,7 +3,7 @@ use std::path::Path;
 use newron::dataset::Dataset;
 use newron::layers::LayerEnum::*;
 use newron::loss::{categorical_entropy::CategoricalEntropy};
-use newron::metrics::MetricEnum;
+use newron::metrics::Metric;
 use newron::sequential::Sequential;
 use newron::optimizers::sgd::SGD;
 
@@ -37,7 +37,7 @@ fn main() {
 
     model.compile(CategoricalEntropy{},
               SGD::new(0.2),
-              vec![MetricEnum::Accuracy]);
+              vec![Metric::Accuracy]);
 
     model.summary();
 

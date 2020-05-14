@@ -1,7 +1,7 @@
 pub mod accuracy;
 pub mod confusion_matrix;
 
-pub enum MetricEnum {
+pub enum Metric {
     Accuracy,
     ConfusionMatrix
 }

@@ -4,7 +4,7 @@ use std::cmp;
 use crate::layers::layer::Layer;
 use crate::layers::*;
 use crate::layers::LayerEnum;
-use crate::metrics::MetricEnum;
+use crate::metrics::Metric;
 use crate::metrics::*;
 use crate::tensor::Tensor;
 use crate::dataset::{Dataset, RowType, ColumnType};
@@ -22,7 +22,7 @@ pub struct Sequential {
     pub layers: Vec<Box<dyn Layer>>,
     loss: Box<dyn Loss>,
     optim: Box<dyn OptimizerStep>,
-    metrics: Vec<MetricEnum>,
+    metrics: Vec<Metric>,
     seed: u32,
 }
 
@@ -55,7 +55,7 @@ impl Sequential {
         println!("Sequential model using {} layers.", self.layers.len());
     }
 
-    pub fn compile<T: 'static + Loss, U: 'static + OptimizerStep>(&mut self, loss: T, optim: U, metrics: Vec<MetricEnum>) {
+    pub fn compile<T: 'static + Loss, U: 'static + OptimizerStep>(&mut self, loss: T, optim: U, metrics: Vec<Metric>) {
         // Set options
         self.loss = Box::new(loss);
         self.optim = Box::new(optim);
@@ -197,7 +197,7 @@ impl Sequential {
 
                     for metric in &self.metrics {
                         match metric {
-                            MetricEnum::Accuracy => {
+                            Metric::Accuracy => {
                                 let acc = accuracy::Accuracy{ 
                                     y_true: test_true_values.clone(), 
                                     y_pred: test_predictions.clone() 
@@ -205,7 +205,7 @@ impl Sequential {
                                 let acc_score = acc.compute();
                                 println!("Accuracy : {:.2}%", acc_score);
                             }
-                            MetricEnum::ConfusionMatrix => {
+                            Metric::ConfusionMatrix => {
                                 let cm = confusion_matrix::ConfusionMatrix{ 
                                     y_true: test_true_values.clone(),
                                     y_pred: test_predictions.clone() 

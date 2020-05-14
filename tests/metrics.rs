@@ -26,9 +26,6 @@ mod metrics_tests {
         let acc_score = metric.compute();
 
         let result = 75.0;
-        println!("{}", predictions);
-        println!("{}", true_values);
-        println!("{}", acc_score);
         assert_eq!(utils::round_f64(acc_score, 1), result);
     }
 
@@ -56,9 +53,6 @@ mod metrics_tests {
         let result = Tensor::new(vec![1.0, 1.0,
                                       0.0, 2.0], vec![2, 2]);
 
-        println!("{}", predictions);
-        println!("{}", true_values);
-        println!("{}", cm);
         assert_eq!(cm, result);
     }
 }

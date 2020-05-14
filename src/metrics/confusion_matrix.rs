@@ -17,13 +17,10 @@ impl ConfusionMatrix {
     
     pub fn compute(&self) -> Tensor {
         // TODO: refactor (accuracy is not the same for classification or regression)
-        // Matrix size output = (n_class x n_class)
         assert_eq!(&self.y_true.shape, &self.y_pred.shape);
         let cm_shape = vec![self.y_true.shape[1], self.y_true.shape[1]];
-        println!("{:?}", cm_shape);
 
         let mut flat_cm = vec![0.0; cm_shape[0].pow(2)];
-        println!("{:?}", flat_cm);
 
         let predictions_categories = utils::one_hot_encoded_tensor_to_indices(&self.y_pred);
         let true_values_categories = utils::one_hot_encoded_tensor_to_indices(&self.y_true);
@@ -31,10 +28,8 @@ impl ConfusionMatrix {
         for index in 0..predictions_categories.len() {
             flat_cm[true_values_categories[index] * cm_shape[0] + predictions_categories[index]] += 1.0;
         }
-        println!("{:?}", &flat_cm);
 
         let cm = Tensor::new(flat_cm.clone(), cm_shape.clone());
-        println!("{:?}", cm);
 
         cm
     }
