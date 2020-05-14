@@ -1,4 +1,4 @@
-use crate::{layers::layer::Layer, optimizers::optimizer::OptimizerStep, tensor::Tensor};
+use crate::{layers::layer::Layer, optimizers::optimizer::OptimizerStep};
 
 pub struct SGD {
     /// Learning Rate

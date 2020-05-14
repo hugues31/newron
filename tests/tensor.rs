@@ -148,7 +148,7 @@ mod tensor_tests {
     #[test]
     fn test_mask() {
          let mask = Tensor::mask(&vec![10, 10], 0.4, 777);
-         assert_eq!(mask.data.iter().sum::<f64>() as usize, 60);
+         assert_eq!(mask.data.iter().sum::<f64>() as usize, 100);
     }
 
     #[test]

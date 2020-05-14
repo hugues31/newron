@@ -7,7 +7,7 @@ pub enum LearnableParams {
 }
 
 pub trait Layer {
-    fn forward(&mut self, input: Tensor) -> Tensor;
+    fn forward(&mut self, input: Tensor, training: bool) -> Tensor;
     fn backward(&mut self, gradient: &Tensor) -> Tensor;
     fn get_info(&self) -> String;
     fn get_params_list(&self) -> Vec<LearnableParams>;
