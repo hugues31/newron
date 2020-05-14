@@ -1,4 +1,3 @@
-use std::fmt;
 use crate::utils;
 use crate::tensor::Tensor;
 
@@ -12,37 +11,37 @@ pub struct ConfusionMatrix {
 
 
 /// Compute confusion matrix to evaluate the accuracy of a classification.
+///
 /// >>> confusionMatrix(y_true, y_pred)
 impl ConfusionMatrix {
-    fn compute(&self) -> Vec<Vec<f64>> {
-        let mut t_n: f64 = 0.0;
-        let mut f_p: f64 = 0.0;
-        let mut f_n: f64 = 0.0;
-        let mut t_p: f64 = 0.0;
+    
+    pub fn compute(&self) -> Tensor {
+        // TODO: refactor (accuracy is not the same for classification or regression)
+        // Matrix size output = (n_class x n_class)
+        assert_eq!(&self.y_true.shape, &self.y_pred.shape);
+        let cm_shape = vec![self.y_true.shape[1], self.y_true.shape[1]];
+        println!("{:?}", cm_shape);
 
-        // TODO: assert y_true et y_pred are the same length
-        for idx in 0..self.y_true.shape[0] {
-            if self.y_true[idx] == self.y_pred[idx] && self.y_true[idx] == 1.0 {
-                t_p += 1.0;
-            } else if self.y_true[idx] == self.y_pred[idx] && self.y_true[idx] == 0.0 {
-                t_n += 1.0;
-            } else if self.y_true[idx] == 0.0 {
-                f_p += 1.0;
-            } else {
-                f_n += 1.0;
-            }
+        let mut flat_cm = vec![0.0; cm_shape[0].pow(2)];
+        println!("{:?}", flat_cm);
+
+        let predictions_categories = utils::one_hot_encoded_tensor_to_indices(&self.y_pred);
+        let true_values_categories = utils::one_hot_encoded_tensor_to_indices(&self.y_true);
+        
+        for index in 0..predictions_categories.len() {
+            flat_cm[true_values_categories[index] * cm_shape[0] + predictions_categories[index]] += 1.0;
         }
+        println!("{:?}", &flat_cm);
 
-        let mut data: Vec<Vec<f64>> = vec![];
+        let cm = Tensor::new(flat_cm.clone(), cm_shape.clone());
+        println!("{:?}", cm);
 
-        data[0].push(t_p);
-        data[0].push(f_p);
-
-        data[1].push(f_n);
-        data[1].push(t_n);
-
-        println!("{:?}", data);
-        data
+        cm
     }
+
+    pub fn accuracy_score(&self) -> () {}
+    pub fn f1_score(&self) -> () {}
+    pub fn recall_score(&self) -> () {}
+    pub fn precision_score(&self) -> () {}
 
 }

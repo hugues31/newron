@@ -195,10 +195,11 @@ impl Sequential {
                     for metric in &self.metrics {
                         match metric {
                             MetricEnum::Accuracy => {
-                                let acc_score = accuracy::Accuracy{ 
+                                let acc = accuracy::Accuracy{ 
                                     y_true: test_true_values.clone(), 
                                     y_pred: test_predictions.clone() 
                                 };
+                                let acc_score = acc.compute();
                                 println!("Accuracy : {:.2}%", acc_score);
                             }
                             MetricEnum::ConfusionMatrix => {
