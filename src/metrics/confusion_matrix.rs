@@ -34,9 +34,24 @@ impl ConfusionMatrix {
         cm
     }
 
-    pub fn accuracy_score(&self) -> () {}
-    pub fn f1_score(&self) -> () {}
-    pub fn recall_score(&self) -> () {}
-    pub fn precision_score(&self) -> () {}
+    pub fn accuracy_score(&self) -> () {
+        //TODO
+        ()
+    }
+
+    pub fn f1_score(&self) -> () {
+        //TODO
+        ()
+    }
+
+    pub fn recall_score(&self) -> () {
+        //TODO
+        ()
+    }
+
+    pub fn precision_score(&self) -> () {
+        //TODO
+        ()
+    }
 
 }

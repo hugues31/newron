@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod metrics_tests {
     use newron::tensor::Tensor;
-    use newron::metrics::MetricEnum;
     use newron::metrics::*;
     use newron::utils;
 
