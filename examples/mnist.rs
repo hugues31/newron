@@ -23,13 +23,15 @@ fn main() {
 
     model.add(Dense {
         input_units: dataset.get_number_features(),
-        output_units: 100
+        output_units: 256
     });
+
+    model.add(Dropout {prob: 0.2});
     
     model.add(ReLU);
 
     model.add(Dense {
-        input_units: 100,
+        input_units: 256,
         output_units: dataset.get_number_targets()
     });
 
@@ -39,5 +41,5 @@ fn main() {
 
     model.summary();
 
-    model.fit(&dataset, 20, true);
+    model.fit(&dataset, 10, true);
 }
