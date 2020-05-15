@@ -17,15 +17,13 @@ mod metrics_tests {
                                            0.7, 0.3,
                                            1.0, 0.0], vec![4, 2]);
 
-        let metric = accuracy::Accuracy{
-            y_true: true_values.clone(), 
-            y_pred: predictions.clone()
-        };
+        let cm = confusion_matrix::ConfusionMatrix::new(true_values.clone(),
+                                                        predictions.clone());
 
-        let acc_score = metric.compute();
+        let acc_score = cm.accuracy_score();
+        let result = 0.75;
 
-        let result = 75.0;
-        assert_eq!(utils::round_f64(acc_score, 1), result);
+        assert_eq!(utils::round_f64(acc_score, 2), result);
     }
 
     #[test]

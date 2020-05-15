@@ -1,19 +1,17 @@
 use crate::utils;
 use crate::tensor::Tensor;
 
-// TODO: Clean ConfusionMatrix conditions
-// TODO: Compute confusion matrix for multiclass
-
 pub struct ConfusionMatrix {
     pub data: Vec<Vec<usize>>,
 }
-
 
 /// Compute confusion matrix to evaluate the accuracy of a classification.
 ///
 /// Examples
 /// --------
-/// >>> metrics::confusionMatrix::new(y_true, y_pred)
+/// >>> metrics::ConfusionMatrix::new(y_true, y_pred)
+/// >>> metrics::ConfusionMatrix.accuracy_score()
+/// >>> metrics::ConfusionMatrix.recall_score()
 impl ConfusionMatrix {
     
     pub fn new(y_true: Tensor, y_pred: Tensor) -> ConfusionMatrix {
@@ -34,7 +32,7 @@ impl ConfusionMatrix {
     }
     
     /// Compute accuracy score based on confusion matrix
-    pub fn accuracy_score(&self) -> usize {
+    pub fn accuracy_score(&self) -> f64 {
         let mut correct_classif: usize = 0;
 
         for i in 0..self.data.len() {
@@ -46,9 +44,11 @@ impl ConfusionMatrix {
             }
         }
 
-        let cm_sum: f64 = self.data.iter().map(|v| v.iter().sum::<f64>()).sum();
-        correct_classif as f64 / cm_sum
+        let cm_sum: f64 = self.data.iter()
+                                    .map(|v| v.iter().sum::<usize>() as f64)
+                                    .sum();
 
+        correct_classif as f64 / cm_sum
     }
 
     pub fn f1_score(&self) -> () {
