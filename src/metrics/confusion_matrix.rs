@@ -18,7 +18,6 @@ impl ConfusionMatrix {
     pub fn new(y_true: Tensor, y_pred: Tensor) -> ConfusionMatrix {
         assert_eq!(y_true.shape, y_pred.shape);
 
-        // TODO: warning, does it really get CM shape???
         let cm_shape = vec![y_true.shape[1], y_true.shape[1]];
         let mut cm = vec![vec![0; cm_shape[0]]; cm_shape[0]];
 
