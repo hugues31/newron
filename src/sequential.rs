@@ -4,9 +4,11 @@ use std::cmp;
 use crate::layers::layer::Layer;
 use crate::layers::*;
 use crate::layers::LayerEnum;
+use crate::metrics::Metric;
+use crate::metrics::*;
 use crate::tensor::Tensor;
 use crate::dataset::{Dataset, RowType, ColumnType};
-use crate::{loss::loss::Loss, random::Rand, optimizers::optimizer::OptimizerStep, optimizers::sgd::SGD, metrics::Metrics};
+use crate::{loss::loss::Loss, random::Rand, optimizers::optimizer::OptimizerStep, optimizers::sgd::SGD};
 use crate::loss::categorical_entropy::CategoricalEntropy;
 use crate::utils;
 
@@ -20,7 +22,7 @@ pub struct Sequential {
     pub layers: Vec<Box<dyn Layer>>,
     loss: Box<dyn Loss>,
     optim: Box<dyn OptimizerStep>,
-    metrics: Vec<Metrics>,
+    metrics: Vec<Metric>,
     seed: u32,
 }
 
@@ -53,7 +55,7 @@ impl Sequential {
         println!("Sequential model using {} layers.", self.layers.len());
     }
 
-    pub fn compile<T: 'static + Loss, U: 'static + OptimizerStep>(&mut self, loss: T, optim: U, metrics: Vec<Metrics>) {
+    pub fn compile<T: 'static + Loss, U: 'static + OptimizerStep>(&mut self, loss: T, optim: U, metrics: Vec<Metric>) {
         // Set options
         self.loss = Box::new(loss);
         self.optim = Box::new(optim);
@@ -194,20 +196,26 @@ impl Sequential {
                     println!("Test loss: {:.4}", test_loss);
 
                     for metric in &self.metrics {
+                        let cm = confusion_matrix::ConfusionMatrix::new(
+                            test_true_values.clone(), 
+                            test_predictions.clone()
+                        );
                         match metric {
-                            Metrics::Accuracy => {
-                                // TODO: refactor (accuracy is not the same for classification or regression)
-                                let predictions_categories = utils::one_hot_encoded_tensor_to_indices(&test_predictions);
-                                let true_values_categories = utils::one_hot_encoded_tensor_to_indices(&test_true_values);
-                                let mut correct_preds = 0;
-                                for index in 0..predictions_categories.len() {
-                                    if predictions_categories[index] == true_values_categories[index] {
-                                        correct_preds += 1;
-                                    }
-                                }
-                                let accuracy = correct_preds as f64 / predictions_categories.len() as f64 * 100.0;
-
-                                println!("Accuracy : {:.2}%", accuracy);
+                            Metric::Accuracy => {
+                                let acc_score = cm.accuracy_score();
+                                println!("Accuracy : {:.2}%", acc_score);
+                            }
+                            Metric::Recall => {
+                                let class = 1;
+                                let recall_score = cm.recall_score(class);
+                            }
+                            Metric::Precision => {
+                                let class = 1;
+                                let precision_score = cm.precision_score(class);
+                            }
+                            Metric::F1 => {
+                                let class = 1;
+                                let f1_score = cm.f1_score(class);
                             }
                         }
                     }
