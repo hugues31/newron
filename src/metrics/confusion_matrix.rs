@@ -1,5 +1,5 @@
-use crate::utils;
 use crate::tensor::Tensor;
+use crate::utils;
 
 pub struct ConfusionMatrix {
     pub data: Vec<Vec<usize>>,
@@ -11,9 +11,8 @@ pub struct ConfusionMatrix {
 /// --------
 /// >>> metrics::ConfusionMatrix::new(y_true, y_pred)
 /// >>> metrics::ConfusionMatrix.accuracy_score()
-/// >>> metrics::ConfusionMatrix.recall_score()
+/// >>> metrics::ConfusionMatrix.recall_score(1)
 impl ConfusionMatrix {
-    
     pub fn new(y_true: Tensor, y_pred: Tensor) -> ConfusionMatrix {
         assert_eq!(y_true.shape, y_pred.shape);
 
@@ -23,22 +22,24 @@ impl ConfusionMatrix {
 
         let y_pred_categories = utils::one_hot_encoded_tensor_to_indices(&y_pred);
         let y_true_categories = utils::one_hot_encoded_tensor_to_indices(&y_true);
-        
+
         for index in 0..y_pred_categories.len() {
             cm[y_true_categories[index]][y_pred_categories[index]] += 1;
         }
 
-        ConfusionMatrix{ data: cm }
+        ConfusionMatrix { data: cm }
     }
-    
+
     /// Compute accuracy score based on confusion matrix
     pub fn accuracy_score(&self) -> f64 {
+        let correct_classif: f64 =
+            (0..self.data.len()).map(|v| self.data[v][v]).sum::<usize>() as f64;
 
-        let correct_classif: f64 = (0..self.data.len()).map(|v| self.data[v][v]).sum::<usize>() as f64;
-
-        let cm_sum: f64 = self.data.iter()
-                                    .map(|v| v.iter().sum::<usize>() as f64)
-                                    .sum();
+        let cm_sum: f64 = self
+            .data
+            .iter()
+            .map(|v| v.iter().sum::<usize>() as f64)
+            .sum();
 
         correct_classif as f64 / cm_sum
     }
@@ -47,12 +48,25 @@ impl ConfusionMatrix {
         todo!();
     }
 
-    pub fn recall_score(&self, class: u8) -> f64 {
-        todo!();
+    pub fn recall_score(&self, class: usize) -> f64 {
+        // The recall for input class is the number of
+        // correctly predicted  input class out of the number of actual input class
+        let correct_class: usize = self.data[class][class];
+        let all_predicted_class = (0..self.data.len())
+            .map(|v| self.data[class][v])
+            .sum::<usize>() as f64;
+
+        correct_class as f64 / all_predicted_class
     }
 
-    pub fn precision_score(&self, class: u8) -> f64 {
-        todo!();
-    }
+    pub fn precision_score(&self, class: usize) -> f64 {
+        // The precision for the input class is the number of
+        // correctly predicted input class out of all predicted input class
+        let correct_class: usize = self.data[class][class];
+        let actual_class = (0..self.data.len())
+            .map(|v| self.data[v][class])
+            .sum::<usize>() as f64;
 
+        correct_class as f64 / actual_class
+    }
 }

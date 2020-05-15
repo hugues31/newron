@@ -206,7 +206,12 @@ impl Sequential {
                                 println!("Accuracy : {:.2}%", acc_score);
                             }
                             Metric::Recall => {
-                                let recall_score = cm.recall_score(0);
+                                let class = 1;
+                                let recall_score = cm.recall_score(class);
+                            }
+                            Metric::Precision => {
+                                let class = 1;
+                                let precision_score = cm.precision_score(class);
                             }
                         }
                     }
