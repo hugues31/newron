@@ -196,17 +196,17 @@ impl Sequential {
                     println!("Test loss: {:.4}", test_loss);
 
                     for metric in &self.metrics {
+                        let cm = confusion_matrix::ConfusionMatrix::new(
+                            test_true_values.clone(), 
+                            test_predictions.clone()
+                        );
                         match metric {
                             Metric::Accuracy => {
-                                let acc = accuracy::Accuracy{ 
-                                    y_true: test_true_values.clone(), 
-                                    y_pred: test_predictions.clone() 
-                                };
-                                let acc_score = acc.compute();
+                                let acc_score = cm.accuracy_score();
                                 println!("Accuracy : {:.2}%", acc_score);
                             }
-                            Metric::ConfusionMatrix => {
-                                let cm = confusion_matrix::ConfusionMatrix::new(test_true_values.clone(), test_predictions.clone());
+                            Metric::Recall => {
+                                let recall_score = cm.recall_score(0);
                             }
                         }
                     }

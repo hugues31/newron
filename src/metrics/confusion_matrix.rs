@@ -33,16 +33,8 @@ impl ConfusionMatrix {
     
     /// Compute accuracy score based on confusion matrix
     pub fn accuracy_score(&self) -> f64 {
-        let mut correct_classif: usize = 0;
 
-        for i in 0..self.data.len() {
-            for j in 0..self.data[i].len() {
-
-                if i == j {
-                    correct_classif += self.data[i][j];
-                }
-            }
-        }
+        let correct_classif: f64 = (0..self.data.len()).map(|v| self.data[v][v]).sum::<usize>() as f64;
 
         let cm_sum: f64 = self.data.iter()
                                     .map(|v| v.iter().sum::<usize>() as f64)
@@ -51,15 +43,15 @@ impl ConfusionMatrix {
         correct_classif as f64 / cm_sum
     }
 
-    pub fn f1_score(&self) -> () {
+    pub fn f1_score(&self) -> f64 {
         todo!();
     }
 
-    pub fn recall_score(&self) -> () {
+    pub fn recall_score(&self, class: u8) -> f64 {
         todo!();
     }
 
-    pub fn precision_score(&self) -> () {
+    pub fn precision_score(&self, class: u8) -> f64 {
         todo!();
     }
 
