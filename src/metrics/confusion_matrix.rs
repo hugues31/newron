@@ -12,6 +12,8 @@ pub struct ConfusionMatrix {
 /// >>> metrics::ConfusionMatrix::new(y_true, y_pred)
 /// >>> metrics::ConfusionMatrix.accuracy_score()
 /// >>> metrics::ConfusionMatrix.recall_score(1)
+/// >>> metrics::ConfusionMatrix.precision_score(1)
+/// >>> metrics::ConfusionMatrix.f1_score_score(1)
 impl ConfusionMatrix {
     pub fn new(y_true: Tensor, y_pred: Tensor) -> ConfusionMatrix {
         assert_eq!(y_true.shape, y_pred.shape);
@@ -44,10 +46,6 @@ impl ConfusionMatrix {
         correct_classif as f64 / cm_sum
     }
 
-    pub fn f1_score(&self) -> f64 {
-        todo!();
-    }
-
     /// The recall for input class is the number of
     /// correctly predicted  input class out of the number of actual input class
     pub fn recall_score(&self, class: usize) -> f64 {
@@ -69,4 +67,11 @@ impl ConfusionMatrix {
 
         correct_class as f64 / actual_class
     }
+
+    /// Harmonic mean of the precision and recall
+    pub fn f1_score(&self, class: usize) -> f64 {
+        (2.0 * self.recall_score(class) * self.precision_score(class))
+            / (self.recall_score(class) + self.precision_score(class))
+    }
+
 }

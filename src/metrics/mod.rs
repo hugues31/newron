@@ -4,4 +4,5 @@ pub enum Metric {
     Accuracy,
     Recall,
     Precision,
+    F1,
 }

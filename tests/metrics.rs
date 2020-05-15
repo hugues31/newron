@@ -18,6 +18,18 @@ mod metrics_tests {
     }
 
     #[test]
+    fn test_cm() {
+        let (y_true, y_pred) = setup();
+
+        let cm = confusion_matrix::ConfusionMatrix::new(y_true.clone(), 
+                                                        y_pred.clone());
+
+        let result = vec![vec![1, 1], vec![0, 2]];
+        assert_eq!(cm.data, result);
+    }
+
+
+    #[test]
     fn test_accuracy() {
         let (y_true, y_pred) = setup();
 
@@ -27,17 +39,6 @@ mod metrics_tests {
         let acc_score = cm.accuracy_score();
         let result = 0.75;
         assert_eq!(utils::round_f64(acc_score, 2), result);
-    }
-
-    #[test]
-    fn test_cm() {
-        let (y_true, y_pred) = setup();
-
-        let cm = confusion_matrix::ConfusionMatrix::new(y_true.clone(), 
-                                                        y_pred.clone());
-
-        let result = vec![vec![1, 1], vec![0, 2]];
-        assert_eq!(cm.data, result);
     }
 
     #[test]
@@ -62,5 +63,17 @@ mod metrics_tests {
         let pre_score = cm.precision_score(1);
         let result = 1.0;
         assert_eq!(utils::round_f64(pre_score, 1), result);
+    }
+
+    #[test]
+    fn test_f1() {
+        let (y_true, y_pred) = setup();
+
+        let cm = confusion_matrix::ConfusionMatrix::new(y_true.clone(), 
+                                                        y_pred.clone());
+
+        let f1_score = cm.f1_score(1);
+        let result = 0.8;
+        assert_eq!(utils::round_f64(f1_score, 1), result);
     }
 }

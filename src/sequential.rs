@@ -213,6 +213,10 @@ impl Sequential {
                                 let class = 1;
                                 let precision_score = cm.precision_score(class);
                             }
+                            Metric::F1 => {
+                                let class = 1;
+                                let f1_score = cm.f1_score(class);
+                            }
                         }
                     }
                 }
