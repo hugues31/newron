@@ -41,17 +41,12 @@ mod metrics_tests {
                                            0.3, 0.7,
                                            1.0, 0.0], vec![4, 2]);
 
+        let cm = confusion_matrix::ConfusionMatrix::new(true_values.clone(),
+                                                        predictions.clone());
 
-        let metric = confusion_matrix::ConfusionMatrix{
-            y_true: true_values.clone(), 
-            y_pred: predictions.clone()
-        };
+        let result = vec![vec![1, 1],
+                          vec![0, 2]];
 
-        let cm = metric.compute();
-
-        let result = Tensor::new(vec![1.0, 1.0,
-                                      0.0, 2.0], vec![2, 2]);
-
-        assert_eq!(cm, result);
+        assert_eq!(cm.data, result);
     }
 }

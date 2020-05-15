@@ -5,53 +5,62 @@ use crate::tensor::Tensor;
 // TODO: Compute confusion matrix for multiclass
 
 pub struct ConfusionMatrix {
-    pub y_true: Tensor,
-    pub y_pred: Tensor,
+    pub data: Vec<Vec<usize>>,
 }
 
 
 /// Compute confusion matrix to evaluate the accuracy of a classification.
 ///
-/// >>> confusionMatrix(y_true, y_pred)
+/// Examples
+/// --------
+/// >>> metrics::confusionMatrix::new(y_true, y_pred)
 impl ConfusionMatrix {
     
-    pub fn compute(&self) -> Tensor {
-        // TODO: refactor (accuracy is not the same for classification or regression)
-        assert_eq!(&self.y_true.shape, &self.y_pred.shape);
-        let cm_shape = vec![self.y_true.shape[1], self.y_true.shape[1]];
+    pub fn new(y_true: Tensor, y_pred: Tensor) -> ConfusionMatrix {
+        assert_eq!(y_true.shape, y_pred.shape);
 
-        let mut flat_cm = vec![0.0; cm_shape[0].pow(2)];
+        // TODO: warning, does it really get CM shape???
+        let cm_shape = vec![y_true.shape[1], y_true.shape[1]];
+        let mut cm = vec![vec![0; cm_shape[0]]; cm_shape[0]];
 
-        let predictions_categories = utils::one_hot_encoded_tensor_to_indices(&self.y_pred);
-        let true_values_categories = utils::one_hot_encoded_tensor_to_indices(&self.y_true);
+        let y_pred_categories = utils::one_hot_encoded_tensor_to_indices(&y_pred);
+        let y_true_categories = utils::one_hot_encoded_tensor_to_indices(&y_true);
         
-        for index in 0..predictions_categories.len() {
-            flat_cm[true_values_categories[index] * cm_shape[0] + predictions_categories[index]] += 1.0;
+        for index in 0..y_pred_categories.len() {
+            cm[y_true_categories[index]][y_pred_categories[index]] += 1;
         }
 
-        let cm = Tensor::new(flat_cm.clone(), cm_shape.clone());
-
-        cm
+        ConfusionMatrix{ data: cm }
     }
+    
+    /// Compute accuracy score based on confusion matrix
+    pub fn accuracy_score(&self) -> usize {
+        let mut correct_classif: usize = 0;
 
-    pub fn accuracy_score(&self) -> () {
-        //TODO
-        ()
+        for i in 0..self.data.len() {
+            for j in 0..self.data[i].len() {
+
+                if i == j {
+                    correct_classif += self.data[i][j];
+                }
+            }
+        }
+
+        let cm_sum: f64 = self.data.iter().map(|v| v.iter().sum::<f64>()).sum();
+        correct_classif as f64 / cm_sum
+
     }
 
     pub fn f1_score(&self) -> () {
-        //TODO
-        ()
+        todo!();
     }
 
     pub fn recall_score(&self) -> () {
-        //TODO
-        ()
+        todo!();
     }
 
     pub fn precision_score(&self) -> () {
-        //TODO
-        ()
+        todo!();
     }
 
 }

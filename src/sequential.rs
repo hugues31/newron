@@ -206,10 +206,7 @@ impl Sequential {
                                 println!("Accuracy : {:.2}%", acc_score);
                             }
                             Metric::ConfusionMatrix => {
-                                let cm = confusion_matrix::ConfusionMatrix{ 
-                                    y_true: test_true_values.clone(),
-                                    y_pred: test_predictions.clone() 
-                                };
+                                let cm = confusion_matrix::ConfusionMatrix::new(test_true_values.clone(), test_predictions.clone());
                             }
                         }
                     }
