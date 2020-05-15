@@ -48,23 +48,23 @@ impl ConfusionMatrix {
         todo!();
     }
 
+    /// The recall for input class is the number of
+    /// correctly predicted  input class out of the number of actual input class
     pub fn recall_score(&self, class: usize) -> f64 {
-        // The recall for input class is the number of
-        // correctly predicted  input class out of the number of actual input class
         let correct_class: usize = self.data[class][class];
         let all_predicted_class = (0..self.data.len())
-            .map(|v| self.data[class][v])
+            .map(|v| self.data[v][class])
             .sum::<usize>() as f64;
 
         correct_class as f64 / all_predicted_class
     }
 
+    /// The precision for the input class is the number of
+    /// correctly predicted input class out of all predicted input class
     pub fn precision_score(&self, class: usize) -> f64 {
-        // The precision for the input class is the number of
-        // correctly predicted input class out of all predicted input class
         let correct_class: usize = self.data[class][class];
         let actual_class = (0..self.data.len())
-            .map(|v| self.data[v][class])
+            .map(|v| self.data[class][v])
             .sum::<usize>() as f64;
 
         correct_class as f64 / actual_class
