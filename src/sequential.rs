@@ -51,8 +51,11 @@ impl Sequential {
 
     /// Get a summary of the model
     pub fn summary(&self) {
-        // TODO: add more infos
-        println!("Sequential model using {} layers.", self.layers.len());
+        println!("Sequential model ({} layers) :", self.layers.len());
+        for (i, layer) in self.layers.iter().enumerate() {
+            println!("{} - {}", i+1, layer.get_info());
+        }
+
     }
 
     pub fn compile<T: 'static + Loss, U: 'static + OptimizerStep>(&mut self, loss: T, optim: U, metrics: Vec<Metric>) {

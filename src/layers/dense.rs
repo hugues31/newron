@@ -28,7 +28,7 @@ impl Dense {
 
 impl Layer for Dense {
     fn get_info(&self) -> String {
-        format!("Weights {}\nBiases {}", self.weights, self.biases)
+        format!("Dense layer ({}x{} = {} params)", self.weights.shape[0], self.weights.shape[1], self.weights.shape[0] * self.weights.shape[1])
     }
 
     fn forward(&mut self, input: Tensor, _training: bool) -> Tensor {

@@ -32,7 +32,7 @@ impl Dropout {
 
 impl Layer for Dropout {
     fn get_info(&self) -> String {
-        format!("Dropout with prob {:.3}", self.prob)
+        format!("Dropout with prob {:.2}%", self.prob*100.0)
     }
 
     fn forward(&mut self, input: Tensor, training: bool) -> Tensor {
