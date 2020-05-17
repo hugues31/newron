@@ -158,7 +158,7 @@ impl Sequential {
         // output_unit_l == input_unit_l+1, output_unit_l_n = y_train.len()) and display message here
         
         // auto batch size : TODO improve it
-        let batch_size = cmp::min(dataset.get_row_count(), 128);
+        let batch_size = cmp::min(dataset.count_row_type(&RowType::Train), 128);
     
         for epoch in 0..epochs {
             let mut epoch_loss = 0.0;
@@ -196,7 +196,7 @@ impl Sequential {
                     let test_true_values = &dataset.get_tensor(RowType::Test, ColumnType::Target);
                     assert_eq!(test_predictions.shape, test_true_values.shape, "Something wrong happened... o_O");
                     let test_loss = self.loss.compute_loss(test_true_values, &test_predictions);
-                    println!("Test loss: {:.4}", test_loss);
+                    println!("Test loss:  {:.4}", test_loss);
 
                     for metric in &self.metrics {
                         let cm = confusion_matrix::ConfusionMatrix::new(

@@ -31,8 +31,8 @@ fn main() {
 
     model.summary();
 
-    // We train the model for 200 epochs
-    model.fit(&dataset, 200, true);
+    // We train the model for 400 epochs
+    model.fit(&dataset, 400, true);
 
     // Display the slope and intercept estimated (=Dense weight/bias)
     println!("\n\nEstimated equation :\n{:?}", model.layers[0]);

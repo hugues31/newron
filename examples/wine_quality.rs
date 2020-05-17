@@ -8,7 +8,8 @@ use newron::loss::{mse::MSE};
 use newron::metrics::Metric;
 
 fn main() {
-    let dataset = Dataset::from_csv(Path::new("datasets/winequality-white.csv"), true).unwrap();
+    let mut dataset = Dataset::from_csv(Path::new("datasets/winequality-white.csv"), true).unwrap();
+    dataset.split_train_test(0.8, true);
 
     println!("{:?}", dataset);
 
