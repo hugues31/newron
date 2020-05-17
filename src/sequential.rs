@@ -236,7 +236,7 @@ Layer (type)                 Output Shape              Param #
                         match metric {
                             Metric::Accuracy => {
                                 let acc_score = cm.accuracy_score();
-                                println!("Accuracy : {:.2}%", acc_score);
+                                println!("Accuracy : {:.2}%", acc_score * 100.0);
                             }
                             Metric::Recall => {
                                 let class = 1;
