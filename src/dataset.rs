@@ -7,6 +7,7 @@ use std::str::FromStr;
 
 use crate::tensor::Tensor;
 use crate::utils;
+use crate::random::Rand;
 
 #[derive(PartialEq, Debug)]
 pub enum ColumnType {
@@ -275,6 +276,31 @@ impl Dataset {
         Tensor::new(result, shape)
     }
 
+    /// Set `percentage` of rows to be `RowType::Train`. Remaining rows are set
+    /// to `RowType::Test`. If `shuffle` is true, rows are set randomly.
+    pub fn split_train_test(&mut self, percentage: f64, shuffle: bool) {
+        let mut index = (0..self.data.len()).collect::<Vec<usize>>();
+        
+        if shuffle {
+            let mut rand = Rand::new(18);
+            rand.shuffle(&mut index[..]);
+        }
+
+        let stop_index = (percentage * index.len() as f64) as usize;
+
+        for i in 0..self.data.len() {
+            let idx = index[i];
+            if i < stop_index {
+                // train
+                self.data[idx].row_type = RowType::Train;
+            }
+            else {
+                // test
+                self.data[idx].row_type = RowType::Test;
+            }
+        }
+    }
+
     // Count the number of columns in the dataset matching the type `col_type`
     fn count_column_type(&self, col_type: &ColumnType) -> usize {
         self.columns_metadata.iter().filter(|&n| n.column_type == *col_type).count()
@@ -317,8 +343,8 @@ impl fmt::Debug for Dataset {
 impl fmt::Display for Dataset {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Example :
-        // X_0 | X_1 | X_2 | Y
-        // 1   | 0   | 0   | 1
+        // X_0 | X_1 | X_2 | Y |
+        // 1   | 0   | 0   | 1 |
         let sep = " | "; // separator
         let mut result = String::new();
 
