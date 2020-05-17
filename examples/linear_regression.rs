@@ -19,7 +19,6 @@ fn main() {
 
     // We set 60% of rows for training and 40% for validation
     dataset.split_train_test(0.6, true);
-    panic!("{:?}", dataset.get_tensor(RowType::Train, ColumnType::Feature));
 
     let mut model = Sequential::new();
 
