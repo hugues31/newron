@@ -60,3 +60,12 @@ pub(crate) fn one_hot_encoded_tensor_to_indices(data: &Tensor) -> Vec<usize> {
 
     result
 }
+
+pub (crate) fn fit_string_to_length(string: String, max_length: usize) -> String {
+    if string.len() >= max_length {
+        string[0..max_length].to_string()
+    } else{
+        string.to_string() + &" ".repeat(max_length-string.len())
+    }
+
+}
