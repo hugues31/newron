@@ -1,4 +1,4 @@
-use newron::dataset::{RowType, Dataset, ColumnType};
+use newron::dataset::Dataset;
 use newron::layers::LayerEnum::*;
 use newron::sequential::Sequential;
 use newron::loss::{mse::MSE};
@@ -7,7 +7,7 @@ use newron::optimizers::sgd::SGD;
 
 fn main() {
     // Sample the function f(x) = 0.2x + 2
-    // with 20 points (X, Y) starting with X=-50 to X=50
+    // with 100 points (X, Y) starting with X=-50 to X=50
     let mut data = Vec::new();
     for x in -10..10 {
         let x = x as f64;
@@ -15,10 +15,7 @@ fn main() {
         data.push(vec![x, y]);
     }
 
-    let mut dataset = Dataset::from_raw_data(data).unwrap();
-
-    // We set 60% of rows for training and 40% for validation
-    dataset.split_train_test(0.6, true);
+    let dataset = Dataset::from_raw_data(data).unwrap();
 
     let mut model = Sequential::new();
 
