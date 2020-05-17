@@ -68,4 +68,3 @@ pub (crate) fn fit_string_to_length(string: String, max_length: usize) -> String
         string.to_string() + &" ".repeat(max_length-string.len())
     }
 
-}

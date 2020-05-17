@@ -1,6 +1,6 @@
 [package]
 name = "newron"
-version = "0.5.1"
+version = "0.5.0"
 authors = ["Hugues Gaillard <hugues.gaillard@me.com>", "Brieuc L'Hélias <brieuc.lhelias@gmail.com>"]
 edition = "2018"
 keywords = [ "neural", "network", "deep", "learning" ]
