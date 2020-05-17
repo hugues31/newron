@@ -1,6 +1,7 @@
 use crate::layers::layer::Layer;
 use crate::tensor::Tensor;
 use crate::layers::layer::LearnableParams;
+use crate::layers::layer::LayerInfo;
 
 pub struct Dense {
     input: Tensor,
@@ -27,8 +28,13 @@ impl Dense {
 }
 
 impl Layer for Dense {
-    fn get_info(&self) -> String {
-        format!("Dense layer ({}x{} = {} params)", self.weights.shape[0], self.weights.shape[1], self.weights.shape[0] * self.weights.shape[1])
+    fn get_info(&self) -> LayerInfo {
+        LayerInfo {
+            layer_type: format!("Dense"),
+            output_shape: self.weights.shape.to_vec(),
+            trainable_param: self.weights.shape.iter().product(),
+            non_trainable_param: 0,
+        }
     }
 
     fn forward(&mut self, input: Tensor, _training: bool) -> Tensor {

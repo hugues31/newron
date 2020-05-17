@@ -51,10 +51,39 @@ impl Sequential {
 
     /// Get a summary of the model
     pub fn summary(&self) {
-        println!("Sequential model ({} layers) :", self.layers.len());
-        for (i, layer) in self.layers.iter().enumerate() {
-            println!("{} - {}", i+1, layer.get_info());
+        // TODO: add more infos
+        println!("Sequential model using {} layers.", self.layers.len());
+        println!("
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #
+=================================================================");
+
+        let mut trainable_param_sum = 0;
+        let mut non_trainable_param_sum = 0;
+
+        for layer in &self.layers {
+            let layer_info = layer.get_info(); 
+            let layer_type = utils::fit_string_to_length(layer_info.layer_type, 29);
+            let output_shape_str = "(".to_string() + &layer_info.output_shape
+                        .iter()
+                        .map(|u| u.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ") + ")";
+            let output_shape = utils::fit_string_to_length(output_shape_str, 26);
+
+            let trainable_param = utils::fit_string_to_length(layer_info.trainable_param.to_string(), 10);
+
+            println!("{}{}{}", layer_type, output_shape, trainable_param);
+
+            trainable_param_sum += layer_info.trainable_param;
+            non_trainable_param_sum += layer_info.non_trainable_param;
+
         }
+        let total_params = trainable_param_sum + non_trainable_param_sum;
+        println!("=================================================================");
+        println!("Total params: {}", total_params);
+        println!("Trainable params: {}", trainable_param_sum);
+        println!("Non trainable params: {}", non_trainable_param_sum);
 
     }
 

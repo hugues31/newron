@@ -1,14 +1,20 @@
 use crate::layers::layer::Layer;
 use crate::tensor::Tensor;
 use crate::layers::layer::LearnableParams;
+use crate::layers::layer::LayerInfo;
 
 pub struct TanH {
     input: Tensor
 }
 
 impl Layer for TanH {
-    fn get_info(&self) -> String {
-        format!("Tanh Layer")
+    fn get_info(&self) -> LayerInfo {
+        LayerInfo {
+            layer_type: format!("tanH"),
+            output_shape: vec![],
+            trainable_param: 0,
+            non_trainable_param: 0,
+        }
     }
 
     fn forward(&mut self, input: Tensor, _training: bool) -> Tensor {

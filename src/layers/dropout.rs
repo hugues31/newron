@@ -1,6 +1,7 @@
 use crate::layers::layer::Layer;
 use crate::tensor::Tensor;
 use crate::layers::layer::LearnableParams;
+use crate::layers::layer::LayerInfo;
 
 pub struct Dropout {
     input: Tensor,
@@ -31,8 +32,13 @@ impl Dropout {
 }
 
 impl Layer for Dropout {
-    fn get_info(&self) -> String {
-        format!("Dropout with prob {:.2}%", self.prob*100.0)
+    fn get_info(&self) -> LayerInfo {
+        LayerInfo {
+            layer_type: format!("Dropout {:.2}%", self.prob*100.0),
+            output_shape: vec![],
+            trainable_param: 0,
+            non_trainable_param: 0,
+        }
     }
 
     fn forward(&mut self, input: Tensor, training: bool) -> Tensor {

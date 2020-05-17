@@ -1,13 +1,20 @@
 use crate::layers::layer::Layer;
 use crate::tensor::Tensor;
 use crate::layers::layer::LearnableParams;
+use crate::layers::layer::LayerInfo;
+
 pub struct Softmax {
     input: Tensor
 }
 
 impl Layer for Softmax {
-    fn get_info(&self) -> String {
-        format!("Softmax Layer")
+    fn get_info(&self) -> LayerInfo {
+        LayerInfo {
+            layer_type: format!("Softmax"),
+            output_shape: self.input.shape.to_vec(),
+            trainable_param: 0,
+            non_trainable_param: 0,
+        }
     }
 
     fn forward(&mut self, input: Tensor, _training: bool) -> Tensor {
