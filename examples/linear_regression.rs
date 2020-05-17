@@ -15,7 +15,8 @@ fn main() {
         data.push(vec![x, y]);
     }
 
-    let dataset = Dataset::from_raw_data(data).unwrap();
+    let mut dataset = Dataset::from_raw_data(data).unwrap();
+    dataset.split_train_test(0.6, true);
 
     let mut model = Sequential::new();
 
@@ -28,11 +29,8 @@ fn main() {
 
     model.summary();
 
-    // We train the model for 200 epochs
-    model.fit(&dataset, 200, true);
-
-    // Display the slope and intercept estimated (=Dense weight/bias)
-    println!("\n\nEstimated equation :\n{:?}", model.layers[0]);
+    // We train the model for 400 epochs
+    model.fit(&dataset, 400, true);
 
     // Interpolation (the model did not see any value for X=4.6)
     let value_to_predict = 4.6;

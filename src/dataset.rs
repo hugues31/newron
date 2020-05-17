@@ -6,7 +6,7 @@ use std::io::{Read, BufReader, BufRead};
 use std::str::FromStr;
 
 use crate::tensor::Tensor;
-use crate::utils;
+use crate::{random::Rand, utils};
 
 #[derive(PartialEq, Debug)]
 pub enum ColumnType {
@@ -294,6 +294,31 @@ impl Dataset {
 
     pub fn get_row_count(&self) -> usize {
         self.data.len()
+    }
+
+    /// Set `percentage` of rows to be `RowType::Train`. Remaining rows are set
+    /// to `RowType::Test`. If `shuffle` is true, rows are set randomly.
+    pub fn split_train_test(&mut self, percentage: f64, shuffle: bool) {
+        let mut index = (0..self.data.len()).collect::<Vec<usize>>();
+        
+        if shuffle {
+            let mut rand = Rand::new(18);
+            rand.shuffle(&mut index[..]);
+        }
+
+        let stop_index = (percentage * index.len() as f64) as usize;
+
+        for i in 0..self.data.len() {
+            let idx = index[i];
+            if i < stop_index {
+                // train
+                self.data[idx].row_type = RowType::Train;
+            }
+            else {
+                // test
+                self.data[idx].row_type = RowType::Test;
+            }
+        }
     }
 }
 

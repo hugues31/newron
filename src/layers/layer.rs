@@ -14,7 +14,6 @@ pub struct LayerInfo {
     pub non_trainable_param: usize,
 }
 
-
 pub trait Layer {
     fn forward(&mut self, input: Tensor, training: bool) -> Tensor;
     fn backward(&mut self, gradient: &Tensor) -> Tensor;
