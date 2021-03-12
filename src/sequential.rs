@@ -236,19 +236,22 @@ Layer (type)                 Output Shape              Param #
                         match metric {
                             Metric::Accuracy => {
                                 let acc_score = cm.accuracy_score();
-                                println!("Accuracy : {:.2}%", acc_score * 100.0);
+                                println!("Accuracy: {:.2}%", acc_score * 100.0);
                             }
                             Metric::Recall => {
                                 let class = 1;
                                 let recall_score = cm.recall_score(class);
+                                println!("Recall: {:.2}%", recall_score * 100.0);
                             }
                             Metric::Precision => {
                                 let class = 1;
                                 let precision_score = cm.precision_score(class);
+                                println!("Precision: {:.2}%", precision_score * 100.0);
                             }
                             Metric::F1 => {
                                 let class = 1;
                                 let f1_score = cm.f1_score(class);
+                                println!("F1 Score: {:.2}%", f1_score * 100.0);
                             }
                         }
                     }
